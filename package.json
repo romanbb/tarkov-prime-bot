@@ -1,6 +1,9 @@
 {
+  "scripts": {
+    "main": "node index.js"
+  },
   "dependencies": {
-    "discord.js": "^14.0.3"
+    "discord.js": "^12.5.3"
   },
   "devDependencies": {
     "eslint": "^8.20.0"
