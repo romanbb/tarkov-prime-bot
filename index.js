@@ -71,7 +71,7 @@ function isActiveForUser(userId) {
 aqcuireStreamingClient()
     .then((transcriber) => {
         transcribeClient = transcriber;
-        client.login(config.discord.token);
+        client.login(process.env.DISCORD_TOKEN);
 
         // console.time("transcribe");
         // transcribeStream("recordings/121017601500512256-audio-1658342559010.pcm")

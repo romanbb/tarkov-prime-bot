@@ -5,7 +5,7 @@ async function queryItem(item) {
         //console.log("found item to lookup", item);;
         const url = `https://tarkov-market.com/api/v1/item?q=${item}`;
         const response = await fetch(url, {headers: {
-            'x-api-key': config['tarkov_market'].api_key
+            'x-api-key': process.env.TARKOV_MARKET_TOKEN
         }});
 
         const json = await response.json();
