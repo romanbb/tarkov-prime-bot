@@ -6,7 +6,8 @@ ai-two		ay-eye-two	AI-2
 cms			cee-em-ess	
 analgin		an-al-gin	
 ifak		eye-fak	
+afak		ay-fak
 goldenstar		goldenstar	
 grizzly		Griz-ly	
 surv-twelve		surv-twelve	Surv12
-etg-c		ee-tee-gee-see
+etg-c		ee-tee-gee-see 

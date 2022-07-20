@@ -103,7 +103,7 @@ async function listenToUser(incomingVoiceChannel, user, channel) {
     voiceChannelConnection.on('speaking', (speakerUser, speaking) => {
         // console.log("speaking,", speakerUser.username, speaking);
         if (speaking.bitfield == 1 && user.id == speakerUser.id && isActiveForUser(speakerUser.id)) {
-            console.log("Listening to user", speakerUser.id)
+            //console.log("Listening to user", speakerUser.id)
             const audioStream = voiceChannelConnection.receiver.createStream(user, {
                 mode: "pcm",
             })
@@ -111,7 +111,7 @@ async function listenToUser(incomingVoiceChannel, user, channel) {
             transcribeStream(undefined, audioStream)
                 .then(processTranscript)
                 .then(queryItem)
-                .then(tts)
+                .then(onItemFound)
                 .catch(error => {
                     console.error("Error in transcribe process", error);
                 })
@@ -121,16 +121,14 @@ async function listenToUser(incomingVoiceChannel, user, channel) {
 
 /**
  * 
- * @param {string} string 
+ * @param {string} string
+ * @returns {string} a keyword if we matched the regex
  */
 async function processTranscript(string) {
-    console.log("processing transcript", string);
     var result = undefined;
     if (string) {
-        const regexCollection = [
-            "price check ([A-Za-z]*)",
-            "check price ([A-Za-z]*)"
-        ]
+        console.log("processing transcript", string);
+        const regexCollection = config.key_phrases.flatMap(phrase => `${phrase} ([A-Za-z]*)`)
 
         regexCollection.forEach((regex) => {
             const match = string.toLowerCase().match(regex);
@@ -144,9 +142,12 @@ async function processTranscript(string) {
     return result;
 }
 
-async function tts(string) {
-    console.log("should tts", string)
+/**
+ * @param {string} string the text to output and speak
+ */
+async function onItemFound(string) {
     if (textChannel && string) {
-        textChannel.send(string, { tts: true })
+        console.log("should tts", string);
+        textChannel.send(string, { tts: true });
     }
 }

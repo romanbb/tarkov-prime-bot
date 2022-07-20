@@ -1,11 +1,11 @@
 const config = require('./config.json');
 
 async function queryItem(item) {
-    console.log("found item to lookup", item);;
     if (item) {
+        //console.log("found item to lookup", item);;
         const url = `https://tarkov-market.com/api/v1/item?q=${item}`;
         const response = await fetch(url, {headers: {
-            'x-api-key': config['tarkov-market'].api_key
+            'x-api-key': config['tarkov_market'].api_key
         }});
 
         const json = await response.json();
@@ -22,7 +22,5 @@ async function queryItem(item) {
     }
     return undefined;
 }
-
-// queryItem("grizzly").then(result => console.log(result))
 
 module.exports.queryItem = queryItem
