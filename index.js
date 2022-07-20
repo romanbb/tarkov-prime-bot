@@ -2,6 +2,27 @@ const Discord = require('discord.js');
 const config = require('./config.json');
 const fs = require('fs');
 
+/**
+ * @type Discord.VoiceChannel
+ */
+var voiceChannel;
+/**
+ * @type Discord.VoiceConnection
+ */
+var voiceChannelConnection;
+
+const cleanup = (options) => {
+    if (voiceChannelConnection) {
+        voiceChannelConnection.disconnect();
+    }
+    if (options.exit) {
+        process.exit();
+    }
+}
+
+process.addListener('exit', cleanup.bind(null, {}));
+process.addListener('SIGINT', cleanup.bind(null, { exit: true }));
+
 const client = new Discord.Client();
 
 client.once('ready', () => {
@@ -16,17 +37,30 @@ client.on('message', message => {
     }
 });
 
+
+
 client.login(config.token);
+
+
 
 /**
  * 
  * @param {Discord.VoiceChannel} voiceChannel 
  * @param {Discord.GuildMember} user
  */
-async function listenToUser(voiceChannel, user) {
-    const connection = await voiceChannel.join();
+async function listenToUser(incomingVoiceChannel, user) {
+    if (!voiceChannel || voiceChannel.id != incomingVoiceChannel.id) {
+        console.log("Changing channels", incomingVoiceChannel);
 
-    const audio = connection.receiver.createStream(user, {
+        voiceChannel = incomingVoiceChannel;
+        // change channels? clear users?
+        if (voiceChannelConnection) {
+            voiceChannelConnection.disconnect();
+        }
+        voiceChannelConnection = await voiceChannel.join();
+    }
+
+    const audio = voiceChannelConnection.receiver.createStream(user, {
         mode: "pcm"
     })
     audio.addListener("close", () => {
