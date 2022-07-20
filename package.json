@@ -1,10 +1,18 @@
 {
   "scripts": {
-    "main": "node index.js"
+    "main": "node index.js",
+    "upload-s3-vocab": "aws s3api put-object --bucket tarkov-prime --key vocab --body support/transcribe_vocab.txt",
+    "delete-vocab": "aws transcribe delete-vocabulary --vocabulary-name tarkov",
+    "create-vocab": "aws transcribe create-vocabulary --vocabulary-name tarkov --vocabulary-file-uri s3://tarkov-prime/vocab --language-code en-US",
+    "update-vocab": "npm run upload-s3-vocab && npm run delete-vocab && npm run create-vocab",
+    "play": "ffplay -autoexit -f s16le -sample_rate 48000 -channels 2"
   },
   "dependencies": {
+    "@aws-sdk/client-transcribe-streaming": "^3.131.0",
     "@discordjs/opus": "^0.8.0",
-    "discord.js": "^12.5.3"
+    "aws-sdk": "^2.1178.0",
+    "discord.js": "^12.5.3",
+    "dotenv": "^16.0.1"
   },
   "devDependencies": {
     "eslint": "^8.20.0"

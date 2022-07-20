@@ -1,0 +1,3 @@
+Phrase	IPA	SoundsLike	DisplayAs
+selewa		sel-eh-wah
+selewa		sel-ew-wah	
