@@ -1,6 +1,6 @@
 {
     "key_phrases": [
-        "price check",
-        "check price"
+        "price check ([0-9A-Za-z\\-\\s]+)([.,]?)",
+        "check price ([0-9A-Za-z\\-\\s]+)([.,]?)"
     ]
 }

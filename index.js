@@ -128,7 +128,7 @@ async function processTranscript(string) {
     var result = undefined;
     if (string) {
         console.log("processing transcript", string);
-        const regexCollection = config.key_phrases.flatMap(phrase => `${phrase} ([A-Za-z]*)`)
+        const regexCollection = config.key_phrases.flatMap(phrase => `${phrase}`)
 
         regexCollection.forEach((regex) => {
             const match = string.toLowerCase().match(regex);
