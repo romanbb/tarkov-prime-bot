@@ -1,4 +1,10 @@
 {
+  "name": "tarkov-prime-bot",
+  "author": {
+    "name": "Roman BIrg",
+    "email": "romanbirg@gmail.com"
+  },
+  "license": "GPLv3",
   "scripts": {
     "main": "node index.js",
     "upload-s3-vocab": "aws s3api put-object --bucket tarkov-prime --key vocab --body support/transcribe_vocab.txt",
