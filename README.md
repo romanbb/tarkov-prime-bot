@@ -18,6 +18,12 @@ The bot listens and transcribes all text spoken by any user who starts the bot c
 
 3. [Tarkov-Market](https://tarkov-market.com) API Key ($5/mo)
 
+### Deploy
+I am trying [fly.io](https://fly.io) to host this right now. You can deploy with:
+
+      npm run deploy
+
+
 ### Credentials
 All secrets will be stored in `.env`. file.
 ```
@@ -28,3 +34,8 @@ AWS_DEFAULT_REGION=
 DISCORD_TOKEN=
 TARKOV_MARKET_TOKEN=
 ```
+
+## TODO
+- Rewrite in TypeScript
+- Update to discord.js v14
+- Multiple server support?
