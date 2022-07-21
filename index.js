@@ -3,8 +3,8 @@ const config = require('./config.json');
 const fs = require('fs');
 require('dotenv').config()
 const { aqcuireStreamingClient, transcribeStream } = require('./aws');
-const { queryItemSummary, queryItems } = require('./tarkov-market');
-const { formatRubles, onItemsFound } = require('./utils');
+const { queryItems } = require('./tarkov-market');
+const { onItemsFound } = require('./utils');
 
 
 /**
@@ -144,7 +144,7 @@ async function listenToUser(incomingVoiceChannel, user, channel) {
             transcribeStream(undefined, audioStream)
                 .then(processTranscript)
                 .then(queryItems)
-                .then(items => onItemsFound(textChannel, items))
+                .then(items => onItemsFound(textChannel, items, voiceChannelConnection))
                 .catch(error => {
                     console.error("Error in transcribe process", error);
                 })

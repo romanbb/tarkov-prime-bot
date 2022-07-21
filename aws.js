@@ -3,11 +3,23 @@ const { PassThrough } = require("stream");
 const { TranscribeStreamingClient, StartStreamTranscriptionCommand } = require("@aws-sdk/client-transcribe-streaming");
 const sts = new AWS.STS();
 
+const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
+const { Polly } = require("aws-sdk");
 
 /**
  * @type {TranscribeStreamingClient}
  */
 var transcribeClient;
+
+/**
+ * @type {PollyClient}
+ */
+var pollyClient;
+
+/**
+ * @type {AWS.STS.Types.GetSessionTokenResponse}
+ */
+var credentials;
 
 /**
  * 
@@ -16,6 +28,10 @@ var transcribeClient;
  * @returns {AWS.STS.Types.GetSessionTokenResponse}
  */
 const getCredentials = async () => {
+    // TODO refresh expiry
+    if (credentials) {
+        return credentials;
+    }
     /**
      * @type AWS.STS.Types.GetSessionTokenRequest
      */
@@ -23,18 +39,32 @@ const getCredentials = async () => {
         DurationSeconds: 12 * 60 * 60, // 12 hours,
     };
 
-    /**
-     * @type AWS.STS.Types.GetSessionTokenRequest
-     */
-    var result;
-
     try {
-        result = await sts.getSessionToken(params).promise()
+        credentials = await sts.getSessionToken(params).promise()
     } catch (err) {
         console.log("error getting session token", err)
     }
 
-    return result;
+    return credentials;
+}
+
+/**
+ * @returns {PollyClient}
+ */
+const aqcuirePollyClient = async () => {
+    if (pollyClient) {
+        return pollyClient;
+    }
+    const { Credentials } = await getCredentials()
+    pollyClient = new PollyClient({
+        region: process.env.AWS_DEFAULT_REGION,
+        credentials: {
+            accessKeyId: Credentials.AccessKeyId,
+            secretAccessKey: Credentials.SecretAccessKey,
+            sessionToken: Credentials.SessionToken
+        }
+    });
+    return pollyClient;
 }
 
 /**
@@ -57,6 +87,22 @@ const aqcuireStreamingClient = async () => {
     return transcribeClient
 }
 
+/**
+ * 
+ * @param {string} text 
+ */
+async function synthesizeSpeech(text) {
+    await aqcuirePollyClient();
+    const response = await pollyClient.send(new SynthesizeSpeechCommand({
+        Text: text,
+        Engine: "standard",
+        LanguageCode: "en-US",
+        OutputFormat: "ogg_vorbis",
+        VoiceId: "Justin"
+    }));
+
+    return response.AudioStream;
+}
 
 /**
  * @param {string} filename file to transcribe
@@ -116,3 +162,4 @@ async function transcribeStream(filename, stream) {
 
 module.exports.aqcuireStreamingClient = aqcuireStreamingClient
 module.exports.transcribeStream = transcribeStream
+module.exports.synthesizeSpeech = synthesizeSpeech

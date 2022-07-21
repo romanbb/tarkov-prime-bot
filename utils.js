@@ -1,4 +1,7 @@
 const Discord = require('discord.js');
+const { synthesizeSpeech } = require('./aws');
+const { OpusEncoder } = require('@discordjs/opus');
+
 
 const formatter = new Intl.NumberFormat('Ru-ru', {
     style: 'currency',
@@ -9,11 +12,14 @@ function formatRubles(money) {
     return formatter.format(money);
 }
 
+const encoder = new OpusEncoder(48000, 2);
+
 /**
- * @param {Discord.TextChannel} textChannel
- * @param {Array} items
+ * @param {Discord.TextChannel} textChannel for sending to text
+ * @param {Array} items required for either scenario
+ * @param {Discord.VoiceConnection} voiceConnection for tts
  */
-const onItemsFound = async (textChannel, items) => {
+const onItemsFound = async (textChannel, items, voiceConnection) => {
     if (textChannel && items && items.length) {
         const mainItem = items[0];
         const embed = new Discord.MessageEmbed()
@@ -42,9 +48,21 @@ const onItemsFound = async (textChannel, items) => {
             embed.setFooter(`${items.length} results found. Try narrowing your query!`)
         }
         textChannel.send(embed);
-
-
     }
+    if (voiceConnection && items && items.length) {
+        const mainItem = items[0];
+
+        const stream = await synthesizeSpeech(`${mainItem.shortName} going for ${kFormatter(mainItem.avg24hPrice)}`);
+        // const opusBuffer = encoder.encode(pcmStream);
+        
+        voiceConnection.play(stream, {
+            bitrate: 48000
+        })
+    }
+}
+
+function kFormatter(num) {
+    return Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)
 }
 
 module.exports.onItemsFound = onItemsFound
