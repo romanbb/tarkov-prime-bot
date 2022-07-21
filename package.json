@@ -11,7 +11,8 @@
     "delete-vocab": "aws transcribe delete-vocabulary --vocabulary-name tarkov",
     "create-vocab": "aws transcribe create-vocabulary --vocabulary-name tarkov --vocabulary-file-uri s3://tarkov-prime/vocab --language-code en-US",
     "update-vocab": "npm run upload-s3-vocab && npm run delete-vocab && npm run create-vocab",
-    "play": "ffplay -autoexit -f s16le -sample_rate 48000 -channels 2"
+    "play": "ffplay -autoexit -f s16le -sample_rate 48000 -channels 2",
+    "deploy": "flyctl deploy --local-only --build-arg NODE_ENV=production"
   },
   "dependencies": {
     "@aws-sdk/client-polly": "^3.131.0",
