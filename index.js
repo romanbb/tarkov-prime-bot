@@ -44,6 +44,10 @@ client.once('ready', () => {
     console.log('Ready!');
 });
 
+client.on('error', error => {
+    console.error(error);
+});
+
 /**
  * Dynamically register commands/
  */
