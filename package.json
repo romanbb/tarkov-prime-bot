@@ -5,8 +5,9 @@
     "email": "romanbirg@gmail.com"
   },
   "license": "GPLv3",
+  "main": "src/index.js",
   "scripts": {
-    "main": "node index.js",
+    "main": "node src",
     "upload-s3-vocab": "aws s3api put-object --bucket tarkov-prime --key vocab --body support/transcribe_vocab.txt",
     "delete-vocab": "aws transcribe delete-vocabulary --vocabulary-name tarkov",
     "create-vocab": "aws transcribe create-vocabulary --vocabulary-name tarkov --vocabulary-file-uri s3://tarkov-prime/vocab --language-code en-US",

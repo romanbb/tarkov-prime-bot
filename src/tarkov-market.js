@@ -1,5 +1,3 @@
-const config = require('./config.json');
-
 async function queryItemSummary(item) {
     if (item) {
         console.log("found item to lookup", item);;

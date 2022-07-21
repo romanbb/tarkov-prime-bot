@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const config = require('./config.json');
+const config = require('../config.json');
 const fs = require('fs');
 require('dotenv').config()
 const { aqcuireStreamingClient, transcribeStream } = require('./aws');
@@ -53,7 +53,7 @@ client.on('error', error => {
  */
 client.commands = new Discord.Collection();
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync('./src/commands/').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
