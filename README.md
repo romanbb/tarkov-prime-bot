@@ -45,6 +45,7 @@ TARKOV_MARKET_TOKEN=
 ```
 
 ## TODO
+- Finish adding item voice models!
 - Rewrite in TypeScript
 - Update to discord.js v14
 - Multiple server support?
