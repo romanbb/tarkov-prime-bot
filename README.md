@@ -6,6 +6,15 @@ This is a Discord bot that allows you to lookup flea market prices with your voi
 
 The bot listens and transcribes all text spoken by any user who starts the bot command. Then that transcribed text is processed in the bot and matched against some pattern, like `price check <item>`. Then `<item>` is looked up on Tarkov-Market and the bot spits out some useful information from there. Along with a shorter TTS message played in the channel.
 
+## Vocabulary
+This is what makes this work. There's a file `support/transcribe_vocab.txt` that contains all the mappings for Amazon Transcribe. The vocab name is hardcoded to `tarkov` for now, you should update yours accordingly.
+
+There's a helper script you can run to push updates to AWS.
+
+         npm run update-vocab
+
+Make sure you check the status afterwords to see if there are any parsing failures. It needs to follow [these guidelines](https://docs.aws.amazon.com/transcribe/latest/dg/custom-vocabulary-create-table.html).
+
 ## Run it yourself
 
 ### Requirements
