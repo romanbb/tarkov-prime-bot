@@ -4,7 +4,6 @@ const { TranscribeStreamingClient, StartStreamTranscriptionCommand } = require("
 const sts = new AWS.STS();
 
 const { PollyClient, SynthesizeSpeechCommand } = require("@aws-sdk/client-polly");
-const { Polly } = require("aws-sdk");
 
 /**
  * @type {TranscribeStreamingClient}

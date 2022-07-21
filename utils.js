@@ -1,7 +1,5 @@
 const Discord = require('discord.js');
 const { synthesizeSpeech } = require('./aws');
-const { OpusEncoder } = require('@discordjs/opus');
-
 
 const formatter = new Intl.NumberFormat('Ru-ru', {
     style: 'currency',
@@ -11,8 +9,6 @@ const formatter = new Intl.NumberFormat('Ru-ru', {
 function formatRubles(money) {
     return formatter.format(money);
 }
-
-const encoder = new OpusEncoder(48000, 2);
 
 /**
  * @param {Discord.TextChannel} textChannel for sending to text
