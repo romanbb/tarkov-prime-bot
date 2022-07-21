@@ -28,6 +28,7 @@ const onItemsFound = async (textChannel, items, voiceConnection) => {
             .addFields(
                 { name: "Average 24h Flea Price", value: formatRubles(mainItem.avg24hPrice) },
                 { name: "Average 7d Price Flea", value: formatRubles(mainItem.avg7daysPrice) },
+                { name: "Sell to " + mainItem.traderName, value: formatRubles(mainItem.traderPrice) },
             );
 
         if (items[1]) {
