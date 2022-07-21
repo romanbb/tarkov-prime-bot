@@ -10,4 +10,21 @@ afak		ay-fak
 goldenstar		goldenstar	
 grizzly		Griz-ly	
 surv-twelve		surv-twelve	Surv12
-etg-c		ee-tee-gee-see 
+etg-c		ee-tee-gee-see	
+hemostat		hee-mo-stat	CALOK-B	
+obdolbos		ob-doll-bohs	
+three-b.t.g.		three-bee-tee-gee	3-(b-TG)
+ahfone-m		ay-h-f-one-m	AHF1-M
+augmentin		aug-men-tin	
+l-one		el-one	L1 (Norepinephrine) injector
+mule			mule
+meldonin		mel-doh-nin
+p.-twentytwo			P22 injector
+propital		pro-pih-tol	
+s.j.-one			SJ1
+s.j.-six			SJ6
+s.j.-nine			SJ9
+vaseline		vas-oh-line	
+zagustin		zag-austin	
+x.t.g.-twelve			xTG-12
+r.k.-four		arr-kay-four	Zenit RK-4 tactical grip

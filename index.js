@@ -148,6 +148,6 @@ async function processTranscript(string) {
 async function onItemFound(string) {
     if (textChannel && string) {
         console.log("should tts", string);
-        textChannel.send(string, { tts: true });
+        textChannel.send(string, { tts: false });
     }
 }
