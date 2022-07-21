@@ -1,9 +1,10 @@
 const Discord = require('discord.js');
 const config = require('./config.json');
+const fs = require('fs');
 require('dotenv').config()
 const { aqcuireStreamingClient, transcribeStream } = require('./aws');
 const { queryItemSummary, queryItems } = require('./tarkov-market');
-const { formatRubles } = require('./utils');
+const { formatRubles, onItemsFound } = require('./utils');
 
 
 /**
@@ -43,10 +44,32 @@ client.once('ready', () => {
     console.log('Ready!');
 });
 
+/**
+ * Dynamically register commands/
+ */
+client.commands = new Discord.Collection();
+
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+    const command = require(`./commands/${file}`);
+    // set a new item in the Collection
+    // with the key as the command name and the value as the exported module
+    client.commands.set(command.name, command);
+}
+
+/**
+ * Command handlers
+ */
 client.on('message', message => {
-    if (message.content === '!ping') {
-        message.channel.send('Pong.');
-    } else if (message.content == '!start') {
+    const prefix = "!"
+    if (!message.content.startsWith(prefix) || message.author.bot) return;
+
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+
+    // TODO migrate these
+    if (command == 'start') {
         if (message.member.voice.channel && !isActiveForUser(message.member.id)) {
 
             activeUsers[message.member.id] = true;
@@ -55,13 +78,22 @@ client.on('message', message => {
         } else {
             console.log("Cannot join channel because user is not in one");
         }
-    } else if (message.content == '!stop') {
+    } else if (command == 'stop') {
         delete activeUsers[message.member.id];
 
         if (Object.keys(activeUsers).length == 0) {
             console.log("last user unsubscribed, cleaning up");
             cleanup({ exit: false });
         }
+    }
+
+    if (!client.commands.has(command)) return;
+
+    try {
+        client.commands.get(command).execute(message, args);
+    } catch (error) {
+        console.error(error);
+        message.reply('there was an error trying to execute that command!');
     }
 });
 
@@ -95,7 +127,7 @@ async function listenToUser(incomingVoiceChannel, user, channel) {
         voiceChannel = incomingVoiceChannel;
         // change channels? clear users?
         if (voiceChannelConnection) {
-            cleanup({exit: false});
+            cleanup({ exit: false });
         }
         voiceChannelConnection = await voiceChannel.join();
     }
@@ -112,7 +144,7 @@ async function listenToUser(incomingVoiceChannel, user, channel) {
             transcribeStream(undefined, audioStream)
                 .then(processTranscript)
                 .then(queryItems)
-                .then(onItemsFound)
+                .then(items => onItemsFound(textChannel, items))
                 .catch(error => {
                     console.error("Error in transcribe process", error);
                 })
@@ -141,35 +173,6 @@ async function processTranscript(string) {
         });
     }
     return result;
-}
-
-
-/**
- * @param items
- */
- async function onItemsFound(items) {
-    if (textChannel && items && items.length) {
-        const mainItem = items[0];
-        const embed = new Discord.MessageEmbed()
-            .setTitle(mainItem.shortName)
-            .setURL(mainItem.wikiLink)
-            .setDescription(mainItem.name)
-            .setAuthor("Tarkov Prime Flea Lookup", undefined, mainItem.link)
-            // .setImage(mainItem.imgBig)
-            .setThumbnail(mainItem.icon)
-            .addFields(
-                { name: "Average 24h Flea Price", value: formatRubles(mainItem.avg24hPrice) },
-                { name: "Average 7d Price Flea", value: formatRubles(mainItem.avg7daysPrice) },
-            );
-
-        if (items[1]) {
-            embed.addField(items[1].name, items[1].avg24hPrice, true)
-        }
-        if (items[2]) {
-            embed.addField(items[2].name, items[2].avg24hPrice, true)
-        }
-        textChannel.send(embed);
-    }
 }
 
 
