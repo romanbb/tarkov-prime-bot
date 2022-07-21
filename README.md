@@ -4,7 +4,7 @@ This is a Discord bot that allows you to lookup flea market prices with your voi
 
 ## How it works
 
-The bot listens and transcribes all text spoken by any user who starts the bot command. Then that transcribed text is processed in the bot and matched against some pattern, like `price check <item>`. Then `<item>` is looked up on Tarkov-Market and the bot spits out some useful information from there.
+The bot listens and transcribes all text spoken by any user who starts the bot command. Then that transcribed text is processed in the bot and matched against some pattern, like `price check <item>`. Then `<item>` is looked up on Tarkov-Market and the bot spits out some useful information from there. Along with a shorter TTS message played in the channel.
 
 ## Run it yourself
 
@@ -13,7 +13,8 @@ The bot listens and transcribes all text spoken by any user who starts the bot c
 2. AWS Account (this will cost based on usage)
 
    1. Amazon Transcribe
-   2. S3: for storing/loading vocab model for Transcribe
+   2. Amazon Polly - TTS
+   3. S3: for storing/loading vocab model for Transcribe
 
 3. [Tarkov-Market](https://tarkov-market.com) API Key ($5/mo)
 
