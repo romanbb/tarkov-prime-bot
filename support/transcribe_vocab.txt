@@ -3,7 +3,7 @@ salewa		sal-eh-wah
 salewa		sal-ew-wah	
 alu-splint		aloo-splint	Alu Splint
 ai-two		ay-eye-two	AI-2
-cms			cee-em-ess	
+cms		cee-em-ess
 analgin		an-al-gin	
 ifak		eye-fak	
 afak		ay-fak

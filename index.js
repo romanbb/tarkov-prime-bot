@@ -2,7 +2,8 @@ const Discord = require('discord.js');
 const config = require('./config.json');
 require('dotenv').config()
 const { aqcuireStreamingClient, transcribeStream } = require('./aws');
-const { queryItem } = require('./tarkov-market');
+const { queryItemSummary, queryItems } = require('./tarkov-market');
+const { formatRubles } = require('./utils');
 
 
 /**
@@ -110,8 +111,8 @@ async function listenToUser(incomingVoiceChannel, user, channel) {
 
             transcribeStream(undefined, audioStream)
                 .then(processTranscript)
-                .then(queryItem)
-                .then(onItemFound)
+                .then(queryItems)
+                .then(onItemsFound)
                 .catch(error => {
                     console.error("Error in transcribe process", error);
                 })
@@ -141,6 +142,36 @@ async function processTranscript(string) {
     }
     return result;
 }
+
+
+/**
+ * @param items
+ */
+ async function onItemsFound(items) {
+    if (textChannel && items && items.length) {
+        const mainItem = items[0];
+        const embed = new Discord.MessageEmbed()
+            .setTitle(mainItem.shortName)
+            .setURL(mainItem.wikiLink)
+            .setDescription(mainItem.name)
+            .setAuthor("Tarkov Prime Flea Lookup", undefined, mainItem.link)
+            // .setImage(mainItem.imgBig)
+            .setThumbnail(mainItem.icon)
+            .addFields(
+                { name: "Average 24h Flea Price", value: formatRubles(mainItem.avg24hPrice) },
+                { name: "Average 7d Price Flea", value: formatRubles(mainItem.avg7daysPrice) },
+            );
+
+        if (items[1]) {
+            embed.addField(items[1].name, items[1].avg24hPrice, true)
+        }
+        if (items[2]) {
+            embed.addField(items[2].name, items[2].avg24hPrice, true)
+        }
+        textChannel.send(embed);
+    }
+}
+
 
 /**
  * @param {string} string the text to output and speak

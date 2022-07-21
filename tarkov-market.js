@@ -1,6 +1,6 @@
 const config = require('./config.json');
 
-async function queryItem(item) {
+async function queryItemSummary(item) {
     if (item) {
         console.log("found item to lookup", item);;
         const url = `https://tarkov-market.com/api/v1/item?q=${item}`;
@@ -23,4 +23,19 @@ async function queryItem(item) {
     return undefined;
 }
 
-module.exports.queryItem = queryItem
+
+async function queryItems(item) {
+    if (item) {
+        console.log("found item to lookup", item);;
+        const url = `https://tarkov-market.com/api/v1/item?q=${item}`;
+        const response = await fetch(url, {headers: {
+            'x-api-key': process.env.TARKOV_MARKET_TOKEN
+        }});
+
+        return await response.json();
+    }
+    return undefined;
+}
+
+module.exports.queryItemSummary = queryItemSummary
+module.exports.queryItems = queryItems
