@@ -136,6 +136,10 @@ async function listenToUser(incomingVoiceChannel, user, channel) {
         voiceChannelConnection = await voiceChannel.join();
     }
 
+    if (process.env.DISCORD_FORCE_OUTPUT_CHANNEL) {
+        textChannel = await client.channels.fetch(process.env.DISCORD_FORCE_OUTPUT_CHANNEL);
+    }
+
     // only create stream when user starts actually talking
     voiceChannelConnection.on('speaking', (speakerUser, speaking) => {
         // console.log("speaking,", speakerUser.username, speaking);
