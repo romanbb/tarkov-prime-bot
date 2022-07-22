@@ -3,22 +3,22 @@ salewa		sal-eh-wah
 salewa		sal-ew-wah	
 alu-splint		aloo-splint	Alu Splint
 ai-two		ay-eye-two	AI-2
-cms		cee-em-ess
+cms		cee-em-ess	
 analgin		an-al-gin	
 ifak		eye-fak	
-afak		ay-fak
+afak		ay-fak	
 goldenstar		goldenstar	
 grizzly		Griz-ly	
 surv-twelve		surv-twelve	Surv12
 etg-c		ee-tee-gee-see	
-hemostat		hee-mo-stat	CALOK-B	
+hemostat		hee-mo-stat	CALOK-B
 obdolbos		ob-doll-bohs	
 three-b.t.g.		three-bee-tee-gee	3-(b-TG)
 ahfone-m		ay-h-f-one-m	AHF1-M
 augmentin		aug-men-tin	
 l-one		el-one	L1 (Norepinephrine) injector
 mule			mule
-meldonin		mel-doh-nin
+meldonin		mel-doh-nin	
 p.-twentytwo			P22 injector
 propital		pro-pih-tol	
 s.j.-one			SJ1
@@ -28,3 +28,286 @@ vaseline		vas-oh-line
 zagustin		zag-austin	
 x.t.g.-twelve			xTG-12
 r.k.-four		arr-kay-four	Zenit RK-4 tactical grip
+fire-clean			FireKlean
+fourty-two			42nd signature
+tank-battery			Tank Battery
+a.a.-battery		double-a-battery	AA battery
+Alkali		al-kal-ee	
+thermometer			Analog thermometer
+teapot			
+vase			
+apollo			
+aramid		air-a-mid	
+awl		owl	
+Axel		axle	
+Bear-buddy			BEAR Buddy
+Book			
+bolts			
+vitamins			multivitamins
+h-two-o.-two			
+fire-clean			FireKlean
+fourty-two			42nd signature
+tank-battery			Tank Battery
+a.a.-battery		double-a-battery	AA battery
+Alkali		al-kal-ee	
+thermometer			Analog thermometer
+teapot			
+vase			
+apollo			
+aramid		air-a-mid	
+awl		owl	
+Axel		axle	
+Bear-buddy			BEAR Buddy
+Book			
+bolts			
+vitamins			multivitamins
+h-two-o.-two			
+n.a.c.l.			NaCl
+g.p.x			GPX
+g.-phone			GPhone
+broken-lcd			BrokenLCD
+lion			
+watch			
+bulbex		bull-bex	
+wires			
+c.p.u.-fan			CPU fan
+dr-lupos		doctor-lupos	DrLupo's
+coffee			majaica
+thermite			
+salt			
+caps			capacitor
+car-battery			
+car-battery		car-batt	car batt.
+cat			
+prokill		pro-kill	
+chainlet			
+matches			
+clin		klin	clin
+measuring-tape			mtape
+cordura		cord-oo-ra	
+hose			
+crickent		crik-ent	
+cyclon		psy-clon	
+d.-battery			d batt.
+d.v.d.			DVD
+h.d.d.			HDD
+beard-oil			BeardOil
+syringe			
+d.-fuel			DFuel
+duct-tape			Duct tape
+e.-drill			EDrill
+drill			EDrill
+motor			
+e.s.-lamp			ES Lamp
+Fuel			
+f.p.-one-hundred			FP-100
+air-filter			FP-100
+flathead-screwdriver			F scdr.
+l.-and-f-screwdriver			L&F scdr.
+fleece			
+g.m.-count			GMCount
+geiger-counter			GMCount
+watch			
+skull			
+one-g.-phone			1GPhone
+zibbo-g.			zibbog
+golden-zibbo			zibbog
+egg			
+gold-chain			goldchain
+rooster			
+g.p.u			graphics card
+green-bat			greenbat
+eagle			
+hawk			
+kite			
+hand-drill			
+horse			
+hunter-matches			hmatches
+h.-matches			hmatches
+tape			
+iridium		ee-ri-dium	iridium
+kek		cack	kektape
+led-x.		lead-ex	ledx
+poison			
+lightbulb			
+bulb			lightbulb
+loot-lord			Loot Lord
+Magnet			
+malboro		mall-boro	
+blood-set			bloodset
+med-tools			medtools
+m.-scissors			MScissors
+jerry-can			metal tank fuel
+big-fuel			metal tank fuel
+m.-parts			M.parts
+s.g.c.-ten			SG-C10
+m.-cable			mcable
+m.c.b.			mcb
+m.-tube			mtube
+m.g.t.			MGT
+p.-filter			PFilter
+nixxor		knicks-or	NIXXOR
+nippers			
+o.f.z.			OFZ
+firesteel		fire-steel	
+ophtalmoscope		off-thal-moh-scope	oscope
+o.-scope			oscope
+ortodontox		or-toe-don-dox	
+bleach			
+paid			PAID
+c.p.u.			PC CPU
+chlorine			
+nails			
+screws			
+sodium			
+paracord		para-cord	
+relay			
+aesa		ay-sah	AESA
+bitcoin		bit-coin	
+plexiglass		plexy-glass	
+meds			
+p.g.w.			PGW
+pliers			
+elite			
+powerbank			
+defibrillator			
+defib			defibrillator
+p.-cord			PCord
+power-cord			PCord
+p.s.u.			PSU
+power-supply			PSU
+pass			
+p.-guage			PGauge
+pressure-guage			PGauge
+p.c.b.			PCB
+paper			
+propane			
+ram			RAM
+helix			
+ratchet			
+raven			
+r.-battery			rbattery
+rec-battery			rbattery
+repellent			
+ripstop			
+roler			
+r.-pliers			RPliers
+shampoo			
+nuts			
+screwdriver			scdr.
+master			
+krasavch		krass-ave-ch	
+shus		shoo-s	
+tube			
+badge			
+d.-cleaner			DCleaner
+soap			
+spark-plug			splug
+s.-plug			splug
+strike			strike
+surv-l.			SurvL
+survival-lighter			SurvL
+t.-plug			T-Plug
+t.p.-two-hundred			TP-200
+tetriz		tetris	Tetriz
+t.p.			toilet paper
+toilet-paper			toilet paper
+toolset			
+toothpaste			
+poxeram		pocks-a-ram	
+v.p.x.			VPX
+veritas		ver-y-tas	
+virtex		ver-tex	
+w.d.-fourty			WD40 100ml
+w.d.-fourty-big			WD40 400ml
+w.-filter			WFilter
+water-filter			WFilter
+w.-parts			WParts
+weapon-parts			WParts
+wilston		will-ston	
+w.-clock			WClock
+L.C.D.			Working LCD
+xeno		zee-no	
+wrench			
+zibbo		zibb-oh	
+moonshine			
+alyonka		all-yon-ka	
+aquamari		aqua-marie	
+crackers			
+kvass		ck-vase	
+whiskey			
+vokda			
+pevko		pehv-co	
+water			
+hot-rod			
+ice-green			IceGreen
+max-energy			MaxEnergy
+rat-cola			RatCola
+tar-cola			TarCola
+big-tushonka		big-toosh-on-ka	beef stew small
+tushonka		toosh-on-ka	beef stew large
+condensed-milk			cond. milk
+peas			
+herring		hair-ing	
+humb-back			humbpack
+saury		sorry	
+sprats			
+squash			
+super-water			superwater
+emelya		emilia	
+e.w.r.			EWR
+iskra		is-cra	
+mayo			
+m.r.e.			MRE
+grand			
+pineapple			
+vita			
+milk			
+oatflakes			
+sugar			
+croutons			
+slickers			
+s.a.s.			SAS
+s.s.d.			SSD
+flash-drive			flash drive
+s.-diary			SDiary
+manual			
+weapon-repair-kit			
+scorpius		scorp-ee-us	
+a.g.s.-seventy-four			AGS-74
+a.g.r.-fourty-seven			AGR47
+m.g.-fourty-seven-a.k.			MG-47 AK
+m.g.-fourty-seven-a.k.-red			
+m.o.e.-a.k.			MOE AK
+a.k.-e.p.g.			AK-EPG
+s.a.w.			SAW
+s.a.w.-f.d.e.			SAW FDE
+t.d.-b.g.			TD BG
+u.s.-palm			AK US Palm pistol grip
+r.k.-three			RK-3
+a.k.-twelve			AK-12
+a.-two			A2
+d.l.g.-one-two-three			DLG123
+e.c.s.f.d.e.			ECS FDE
+f.-one-.s.t.-one			F1 St1
+f.-one-.s.t.-two-p.c.			F1 ST2 PC
+f.-one-.s.t.-two			F1 ST2
+battle-grip			Battle Grip
+ergo			
+m.o.e.a.r.-fifteen			MOE AR15
+gral-s		grall-ess	
+t.d.-hex			TD Hex
+t.d.-one-two-zero-zero-zero-one			TD120001
+r.-fourty-three-val			R43 VAL
+pro-seven-hundren			Pro700
+ultima			
+mosin-pistol-grip			
+t-fivethousand-m.			T-5000M
+p.-two-two-six-axelson			P226 Axelson
+p.-two-two-six-f.d.e.			P226 FDE
+p.-two-two-six-scorpion			P226 Scorpion
+p.-two-two-six-c.l.			P226 CL
+p.-two-two-six-hogue			P226 Hogue
+p.-two-two-six-elite			P226 Elite
+p.-two-two-six-black			P226 Black
+undefinedundefined
