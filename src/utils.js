@@ -49,9 +49,15 @@ const onItemsFound = async (textChannel, items, voiceConnection) => {
     if (voiceConnection && items && items.length) {
         const mainItem = items[0];
 
-        const stream = await synthesizeSpeech(`${mainItem.shortName} going for ${kFormatter(mainItem.avg24hPrice)}`);
-        // const opusBuffer = encoder.encode(pcmStream);
-        
+        let text;
+        if (mainItem.bannedOnFlea) {
+            text = `${mainItem.shortName} sells to ${mainItem.traderName} for ${kFormatter(mainItem.traderPrice)}`;
+        } else {
+            text = `${mainItem.shortName} going for ${kFormatter(mainItem.avg24hPrice)}`
+        }
+
+        const stream = await synthesizeSpeech(text);
+
         voiceConnection.play(stream, {
             bitrate: 48000
         })
@@ -59,7 +65,7 @@ const onItemsFound = async (textChannel, items, voiceConnection) => {
 }
 
 function kFormatter(num) {
-    return Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)
+    return Math.abs(num) > 999 ? Math.sign(num) * ((Math.abs(num) / 1000).toFixed(1)) + 'k' : Math.sign(num) * Math.abs(num)
 }
 
 module.exports.onItemsFound = onItemsFound
