@@ -8,6 +8,7 @@
   "scripts": {
     "build": "npm run clean && tsc",
     "clean": "rm -rf dist",
+    "dev": "npm run build && node --trace-warnings -r dotenv/config -r tsconfig-paths/register  dist/bot dotenv_config_path=.env.dev dotenv_config_debug=true",
     "start": "npm run build && node -r tsconfig-paths/register dist/bot",
     "prod": "node -r tsconfig-paths/register dist/bot",
     "upload-s3-vocab": "aws s3api put-object --bucket tarkov-prime --key vocab --body support/transcribe_vocab.txt",

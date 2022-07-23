@@ -4,3 +4,4 @@ recordings/
 dist/
 *.pcm
 .env
+.env.dev
