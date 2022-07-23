@@ -7,13 +7,21 @@ export const deploy = async (guild: Guild) => {
 			description: 'Joins the voice channel that you are in',
 		},
 		{
-			name: 'record',
-			description: 'Enables recording for a user',
-			options: [
+			name: 'start',
+			description: 'Tells the bot to listen to you for flea prices checks.',
+		},
+        {
+			name: 'stop',
+			description: 'Tells the bot to stop listening to you for flea price checks.',
+		},
+        {
+			name: 'check',
+			description: 'Run a manual lookup with text.',
+            options: [
 				{
-					name: 'speaker',
-					type: ApplicationCommandOptionType.User,
-					description: 'The user to record',
+					name: 'query',
+					type: ApplicationCommandOptionType.String,
+					description: 'The item to query',
 					required: true,
 				},
 			],

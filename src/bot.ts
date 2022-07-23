@@ -10,7 +10,8 @@ import { interactionHandlers } from './discord/interactions';
 import { synthesizeSpeech, transcribeStream } from './aws';
 import { queryItems, TarkovMarketItemResult } from './tarkov-market';
 import { formatRubles, kFormatter } from './utils';
-import { textToSpeach } from './commands/audio';
+import { textToSpeach } from './audio';
+import { embedForItems } from './text';
 
 const client = new Discord.Client({
 	intents: [
@@ -99,37 +100,11 @@ export async function handleAudioStream(audioStream: Stream.Readable,  voiceConn
 }
 
 export async function onItemsFound(textChannel: TextBasedChannel | null, items: TarkovMarketItemResult[] | null, voiceConnection: VoiceConnection | null) {
-    if (textChannel && items && items[0]) {
-        const mainItem = items[0];
-        const embed = new EmbedBuilder()
-            .setTitle(mainItem.shortName)
-            .setURL(mainItem.wikiLink)
-            .setDescription(mainItem.name)
-            .setAuthor({ name: "Tarkov Prime Flea Lookup", url: mainItem.link })
-            // .setImage(mainItem.imgBig)
-            .setThumbnail(mainItem.icon)
-            .addFields(
-                { name: "Average 24h Flea Price", value: formatRubles(mainItem.avg24hPrice) },
-                { name: "Average 7d Price Flea", value: formatRubles(mainItem.avg7daysPrice) },
-                { name: "Sell to " + mainItem.traderName, value: formatRubles(mainItem.traderPrice) }
-            );
-
-        if (items[1]) {
-            embed.addFields(
-                { name: '\u200B', value: 'Other results' },
-                { name: items[1].name, value: formatRubles(items[1].avg24hPrice), inline: true }
-            );
+    if (textChannel && items) {
+        const embed = embedForItems(items);
+        if (embed) {
+            textChannel.send({ embeds: [embed] });
         }
-        if (items[2]) {
-            embed.addFields(
-                { name: items[2].name, value: formatRubles(items[2].avg24hPrice), inline: true }
-            );
-        }
-
-        if (items.length > 2) {
-            embed.setFooter({ text: `${items.length} results found. Try narrowing your query!` });
-        }
-        textChannel.send({ embeds: [embed] });
     }
     if (voiceConnection && items && items[0]) {
         const mainItem = items[0];
@@ -144,8 +119,5 @@ export async function onItemsFound(textChannel: TextBasedChannel | null, items: 
         textToSpeach(text, voiceConnection);
     }
 }
-
-
-
 
 void client.login(Environment.discord.token);

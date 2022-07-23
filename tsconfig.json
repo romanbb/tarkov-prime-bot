@@ -33,7 +33,7 @@
 		"declaration": true,
 		"declarationMap": true,
 		"importHelpers": true,
-		"importsNotUsedAsValues": "error",
+		"importsNotUsedAsValues": "preserve",
 		"inlineSources": true,
 		"newLine": "lf",
 		"noEmitHelpers": true,
