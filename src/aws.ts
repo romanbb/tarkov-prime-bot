@@ -10,21 +10,28 @@ const sts = new AWS.STS();
 
 let transcribeClient: TranscribeStreamingClient;
 let pollyClient: PollyClient;
-let credentials: AWS.STS.Types.GetSessionTokenResponse;
+let credentials: AWS.STS.Types.GetSessionTokenResponse | undefined;
 
 const getCredentials = async (): Promise<AWS.STS.GetSessionTokenResponse> => {
-    // TODO refresh expiry
     if (credentials) {
-        return credentials;
+        const expiry = credentials.Credentials?.Expiration.getTime();
+        if (expiry && expiry > new Date().getTime()) {
+            console.log("AWS token expired, renewing")
+            credentials = undefined;
+        } else {
+            return credentials;
+        }
     }
     const params: AWS.STS.Types.GetSessionTokenRequest = {
-        DurationSeconds: 12 * 60 * 60, // 12 hours,
+        // DurationSeconds: 12 * 60 * 60, // 12 hours,
+        DurationSeconds: 900, // 15m
     };
 
     try {
         credentials = await sts.getSessionToken(params).promise()
     } catch (err) {
         console.log("error getting session token", err)
+        throw err;
     }
 
     return credentials;
