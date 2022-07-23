@@ -55,7 +55,7 @@ teapot
 vase			
 apollo			
 aramid		air-a-mid	
-awl		owl	
+awl		all	
 Axel		axle	
 Bear-buddy			BEAR Buddy
 Book			
@@ -88,7 +88,7 @@ cordura		cord-oo-ra
 hose			
 crickent		crik-ent	
 cyclon		psy-clon	
-d.-battery			d batt.
+d.-battery			d size battery
 d.v.d.			DVD
 h.d.d.			HDD
 beard-oil			BeardOil
@@ -162,7 +162,7 @@ screws
 sodium			
 paracord		para-cord	
 relay			
-aesa		ay-sah	AESA
+aesa		asa	AESA
 bitcoin		bit-coin	
 plexiglass		plexy-glass	
 meds			
@@ -231,10 +231,10 @@ xeno		zee-no
 wrench			
 zibbo		zibb-oh	
 moonshine			
-alyonka		all-yon-ka	
+alyonka		ali-on-ka	
 aquamari		aqua-marie	
 crackers			
-kvass		ck-vase	
+kvass		k-vass	
 whiskey			
 vokda			
 pevko		pehv-co	
@@ -244,19 +244,19 @@ ice-green			IceGreen
 max-energy			MaxEnergy
 rat-cola			RatCola
 tar-cola			TarCola
-big-tushonka		big-toosh-on-ka	beef stew small
-tushonka		toosh-on-ka	beef stew large
+big-tushonka		big-toosh-on-ka	beef stew large
+tushonka		toosh-on-ka	beef stew small
 condensed-milk			cond. milk
 peas			
 herring		hair-ing	
-humb-back			humbpack
+hump-back			humbpack
 saury		sorry	
 sprats			
 squash			
 super-water			superwater
 emelya		emilia	
 e.w.r.			EWR
-iskra		is-cra	
+iskra		is-kruh	
 mayo			
 m.r.e.			MRE
 grand			
@@ -310,4 +310,95 @@ p.-two-two-six-c.l.			P226 CL
 p.-two-two-six-hogue			P226 Hogue
 p.-two-two-six-elite			P226 Elite
 p.-two-two-six-black			P226 Black
-undefinedundefined
+m.v.f.-zero-zero-one			MVF001
+a.x.m.c.-pad			AXMC pad
+ash-twelve			ASh-12
+g.f.-mod-three			GF MOD3
+shift			Fortis shift
+sturmgriff		stern-griff	
+c.q.r.			CQR tactical
+k.a.c.v.f.g.			KAC VFG
+m.p.-nine-v.f.g.			MP9 VFG
+a.f.g.-black			AFG BLK
+a.f.g.-f.d.e.			AFG FDE
+a.f.g.-f.g.			AFG FG
+a.f.g.-o.d.			AFG OD
+a.f.g.-m.-lock			AFG M-LOK
+a.f.g.-m-lock-f.d.e.			AFG M-LOK FDE
+a.f.g.-m-lock-olive			AFG M-LOK Olive
+a.f.g.-m-lock-gray			AFG M-LOK gray
+r.v.g.-black			RVG BLK
+r.v.g.-f.d.e.			RVG FDE
+m.t.-v.f.g.			MT VFG
+t.-five-thousand-m.-pad			T-5000M Pad
+pillau		pill-ow	
+s.s.v.f.k.			SSVFK
+s.e.-five			SE-5
+s.i.-cobra			SI Cobra
+s.f.g.			SFG
+b.v.g.m.k.-fourty-six-k.			BVG-MK46K
+b.v.g.m.k.-fourty-six-k.-f.d.e.			BVG-MK46K FDE
+b.v.g.m.k.-fourty-six-k.-grey			BVG-MK46K Gray
+u.v.g.			UVG
+r.k.-zero			RK-0
+r.k.-one			RK-1
+b.-twenty-five-u.			B-25U RK-1
+r.k.-two			RK-2
+r.k.-four			RK-4
+r.k.-five			RK-5
+r.k.-six			RK-6
+s.d.n.-six			SDN-6
+illusion-nine			Illusion 9
+d.t.k.p.			DTKP
+d.g.n.a.k.-fourty-seven-b.			DGNAK47B
+s.r.v.v.a.k.m.		surv-akm	SRVV AKM
+dynacomp-a.k.		dine-a-comp-a-k	Dynacomp AK
+antidote			
+d.t.k.-one			DTK-1
+hexagon-a.k.-seventy-four			Hexagon AK-74
+p.w.s.c.q.b.-seventy-four			PWS CQB 74
+s.r.v.v.a.k.-seventy-four			SRVV AK74
+t.g.p.a.			TGP-A
+hexagon-a.k.m.			Hexagon AKM
+p.b.s.-one			PBS-1
+d.t.k.-four-m.			DTK-4M
+a.k.m.l			AKML
+p.b.s.-four			PBS-4
+a.p.b.			APB
+wave-seven-six-two			WAVE 762
+keymount			
+red-seven-six-two			RED 762
+k.a.c.q.d.c.			KAC QDC
+q.d.c.-seven-six-two			QDC 762
+shrewd-seven-six-two			SHREWD 762
+d.g.n.-seven-six-two-b.			DGN762B
+vette-seven-six-two		vett-seven-six-two	Vette 762
+atlas-seven			ATLAS-7
+m.-eleven			M11
+procomp-seven-six-two			ProComp 762
+war-seven-six-two			War 762
+wave-five-five-six			WAVE 556
+u.s.g.i.a.-two			AUSGI A2
+p.s.r.-five-five-six			PSR 556
+q.d.c.-five-five-six			QDC 556
+blitz-five-five-six			BLITZ 556
+vette-five-five-six			Vette 556
+k.x.-three-five-five-six			KX3 556
+p.w.s.c.q.b.			PWS CQB
+jailbrake		jail-brake	
+a.s.r.-five-five-six			ASR 556
+war-comp-five-five-six			WarComp 556
+war-five-five-six			War 556
+claymore			
+v.p.-zero-nine		vee-pee-oh-nine	VP-09
+phantom		fantom	
+v.a.l.-suppressor			VAL suppressor
+ash-twelve			ASh-12
+alpha-nine			Alpha 9
+d.v.l.-ten-m.d.			DVL-10 MD
+d.v.l.-ten-m.-two			DVL-10 M2
+wave-q.d.			WAVE QD
+g.k.-zero-one		gee-kay-oh-one	GK-01
+g.k.-zero-two		gee-kay-oh-two	GK-02
+one			ONE
+s.f.n.-five-seven			SFN-57
