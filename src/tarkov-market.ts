@@ -32,7 +32,7 @@ export interface TarkovMarketItemResult {
 
 const axiosClient =  axios.create({
     baseURL: 'https://tarkov-market.com/api/v1/',
-    timeout: 1000,
+    timeout: 5000,
     headers:  {
         'x-api-key': Environment.tarkov_market.token
     }
