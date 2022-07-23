@@ -14,7 +14,7 @@ processes = []
 [experimental]
   allowed_public_ports = []
   auto_rollback = true
-  cmd = "npm run main"
+  cmd = "npm run prod"
 
 [[services]]
   http_checks = []
