@@ -1,5 +1,5 @@
 
-import { getVoiceConnection, joinVoiceChannel, VoiceConnection } from '@discordjs/voice';
+import { getVoiceConnection, VoiceConnection } from '@discordjs/voice';
 import { GatewayIntentBits } from 'discord-api-types/v10';
 import Discord, { Events, Interaction, TextBasedChannel } from 'discord.js';
 import type Stream from 'stream';
@@ -27,18 +27,22 @@ client.on(Events.ClientReady, () => {
      * Try to auto join a dev voice channel and begin listening to the developer
      */
     if (Environment.debug) {
-        if (Environment.discord.dev_guild_id && Environment.discord.dev_user_to_auto_listen) {
-            client.guilds.fetch(Environment.discord.dev_guild_id)
+        if (Environment.discord.auto_deploy_guild_id && Environment.discord.dev_user_to_auto_listen) {
+            client.guilds.fetch(Environment.discord.auto_deploy_guild_id)
                 .then(deploy)
                 .then(async () => {
-                    const voiceChannel = client.guilds.cache.get(Environment.discord.dev_guild_id!)?.
+                    const voiceChannel = client.guilds.cache.get(Environment.discord.auto_deploy_guild_id!)?.
                         members.cache.get(Environment.discord.dev_user_to_auto_listen!)?.voice.channel;
                     const textChannel = await client.channels.fetch(Environment.discord.dev_force_input_channel!)
                     joinAndListen(recordable, Environment.discord.dev_user_to_auto_listen!, voiceChannel ?? undefined, textChannel as any)
                 })
                 .catch(console.warn);
+        } else if (Environment.discord.auto_deploy_guild_id) {
+            // still only one consumer :D
+            client.guilds.fetch(Environment.discord.auto_deploy_guild_id)
+                .then(deploy)
+                .catch(console.warn);
         }
-
 
         console.log('Ready!');
     }
