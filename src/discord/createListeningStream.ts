@@ -62,9 +62,10 @@ export function createListeningStream(receiver: VoiceReceiver, userId: string): 
 	pipeline(opusStream as any, oggStream, (err) => {
 		if (err) {
 			console.warn(`❌ Error recording stream ${err.message}`);
-		} else {
-			console.log(`✅ Recording stream`);
 		}
+		//  else {
+		// 	console.log(`✅ Recording stream`);
+		// }
 	});
 
     return oggStream as any;

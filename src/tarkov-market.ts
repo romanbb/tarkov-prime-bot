@@ -64,7 +64,7 @@ export async function queryItemSummary(item?: string): Promise<string | null> {
 
 export async function queryItems(item?: string): Promise<TarkovMarketItemResult[] | null> {
     if (item) {
-        console.log("found item to lookup", item);;
+        console.log("✅ Found item to lookup: ", item);;
         const url = `https://tarkov-market.com/api/v1/item?q=${item}`;
         const response = await axiosClient.get<TarkovMarketItemResult[]>(url);
 
