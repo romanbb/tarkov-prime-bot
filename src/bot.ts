@@ -1,17 +1,17 @@
 
 import { getVoiceConnection, VoiceConnection } from '@discordjs/voice';
 import { GatewayIntentBits } from 'discord-api-types/v10';
-import Discord, { EmbedBuilder, Events, Interaction, TextBasedChannel } from 'discord.js';
-import Config from './config.json';
-import Environment from './config.env';
+import Discord, { Events, Interaction, TextBasedChannel } from 'discord.js';
 import type Stream from 'stream';
+import { textToSpeach } from './audio';
+import { transcribeStream } from './aws';
+import Environment from './config.env';
+import Config from './config.json';
 import { deploy } from './discord/deploy';
 import { interactionHandlers } from './discord/interactions';
-import { synthesizeSpeech, transcribeStream } from './aws';
 import { queryItems, TarkovMarketItemResult } from './tarkov-market';
-import { formatRubles, kFormatter } from './utils';
-import { textToSpeach } from './audio';
 import { embedForItems } from './text';
+import { kFormatter } from './utils';
 
 const client = new Discord.Client({
     intents: [
