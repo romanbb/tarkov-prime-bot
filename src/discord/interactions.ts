@@ -5,6 +5,8 @@ import { embedForItems } from '../text';
 import { handleAudioStream } from '../bot';
 import { createListeningStream } from './createListeningStream';
 
+const recording = new Set<Snowflake>()
+
 async function join(
 	interaction: CommandInteraction,
 	recordable: Set<Snowflake>,
@@ -19,11 +21,11 @@ async function join(
 				channelId: channel.id,
 				guildId: channel.guild.id,
 				selfDeaf: false,
-				selfMute: true,
+				selfMute: false,
 				adapterCreator: channel.guild.voiceAdapterCreator,
 			});
 		} else {
-			await interaction.followUp({content: 'Join a voice channel and then try that again!', ephemeral: true});
+			await interaction.followUp({ content: 'Join a voice channel and then try that again!', ephemeral: true });
 			return;
 		}
 	}
@@ -33,12 +35,17 @@ async function join(
 		const receiver = connection.receiver;
 
 		receiver.speaking.on('start', (userId) => {
-			if (recordable.has(userId)) {
-
+			if (recordable.has(userId) && !recording.has(userId)) {
+				recording.add(userId);
 				const audioStream = createListeningStream(receiver, userId);
 				handleAudioStream(audioStream, connection ?? null, interaction.channel);
 			}
 		});
+
+		receiver.speaking.on('end', (userId) => {
+			recording.delete(userId);
+
+		})
 	} catch (error) {
 		console.warn(error);
 		await interaction.followUp('Failed to join voice channel within 20 seconds, please try again later!');
@@ -58,6 +65,9 @@ async function startListening(
 		const userId = interaction.member?.user.id as Snowflake;
 		recordable.add(userId);
 
+		/**
+		 * if user is already keyed up start immediately
+		 */
 		const receiver = connection.receiver;
 		if (connection.receiver.speaking.users.has(userId)) {
 			const audioStream = createListeningStream(receiver, userId);
@@ -95,9 +105,9 @@ async function check(
 		.then(items => {
 			const embed = embedForItems(items)
 			if (embed) {
-				interaction.reply({ ephemeral: true, embeds: [embed]});
+				interaction.reply({ ephemeral: true, embeds: [embed] });
 			} else {
-				interaction.reply({ ephemeral: true, content: 'No results found.' });	
+				interaction.reply({ ephemeral: true, content: 'No results found.' });
 			}
 		})
 }
@@ -105,13 +115,12 @@ async function check(
 
 async function leave(
 	interaction: CommandInteraction,
-	recordable: Set<Snowflake>,
+	_recordable: Set<Snowflake>,
 	_client: Client,
 	connection?: VoiceConnection,
 ) {
 	if (connection) {
 		connection.destroy();
-		recordable.clear();
 		await interaction.reply({ ephemeral: true, content: 'Left the channel!' });
 	} else {
 		await interaction.reply({ ephemeral: true, content: 'Not playing in this server!' });
