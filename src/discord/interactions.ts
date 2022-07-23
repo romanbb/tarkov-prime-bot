@@ -1,11 +1,55 @@
-import { entersState, joinVoiceChannel, VoiceConnection, VoiceConnectionStatus } from '@discordjs/voice';
-import { Client, CommandInteraction, GuildMember, Snowflake } from 'discord.js';
+import { entersState, getVoiceConnection, joinVoiceChannel, VoiceConnection, VoiceConnectionStatus } from '@discordjs/voice';
+import { Client, CommandInteraction, GuildMember, Snowflake, TextBasedChannel, TextChannel, VoiceBasedChannel, VoiceChannel } from 'discord.js';
 import { queryItems } from '../tarkov-market';
 import { embedForItems } from '../text';
 import { handleAudioStream } from '../bot';
 import { createListeningStream } from './createListeningStream';
 
-const recording = new Set<Snowflake>()
+const recording = new Set<Snowflake>();
+
+/**
+ * Debug helper
+ * @param recordable 
+ * @param userId 
+ * @param voiceChannel 
+ * @param textChannel 
+ */
+export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflake, voiceChannel?: VoiceBasedChannel, textChannel?: TextBasedChannel) {
+	if (!voiceChannel) {
+		throw Error("need a voice channel to join and listen");
+	}
+	let connection: VoiceConnection | undefined = getVoiceConnection(voiceChannel.guildId);
+	if (!connection) {
+		connection = joinVoiceChannel({
+			channelId: voiceChannel.id,
+			guildId: voiceChannel.guild.id,
+			selfDeaf: false,
+			selfMute: false,
+			adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+		});
+	}
+	recordable.add(userId);
+
+	try {
+		await entersState(connection, VoiceConnectionStatus.Ready, 20e3);
+		const receiver = connection.receiver;
+
+		receiver.speaking.on('start', (userId) => {
+			if (!recording.has(userId)) {
+				recording.add(userId);
+				const audioStream = createListeningStream(receiver, userId);
+				handleAudioStream(audioStream, connection ?? null, textChannel ?? null);
+			}
+		});
+
+		receiver.speaking.on('end', (userId) => {
+			recording.delete(userId);
+
+		})
+	} catch (error) {
+		console.warn(error);
+	}
+}
 
 async function join(
 	interaction: CommandInteraction,
@@ -85,11 +129,13 @@ async function stopListening(
 	interaction: CommandInteraction,
 	recordable: Set<Snowflake>,
 	_client: Client,
-	connection?: VoiceConnection,
+	_connection?: VoiceConnection,
 ) {
 	const userId = interaction.member?.user.id as Snowflake;
 	recordable.delete(userId);
-	connection?.receiver?.voiceConnection?.destroy();
+
+	// TODO only if last member?
+	// connection?.receiver?.voiceConnection?.destroy();
 	await interaction.reply({ ephemeral: true, content: 'No longer listening to you!' });
 }
 

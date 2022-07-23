@@ -8,7 +8,7 @@ import { transcribeStream } from './aws';
 import Environment from './config.env';
 import Config from './config.json';
 import { deploy } from './discord/deploy';
-import { interactionHandlers } from './discord/interactions';
+import { interactionHandlers, joinAndListen } from './discord/interactions';
 import { queryItems, TarkovMarketItemResult } from './tarkov-market';
 import { embedForItems } from './text';
 import { kFormatter } from './utils';
@@ -23,11 +23,25 @@ const client = new Discord.Client({
 });
 
 client.on(Events.ClientReady, () => {
-    if (Environment.discord.dev_guild_id) {
-        client.guilds.fetch(Environment.discord.dev_guild_id)
-            .then(deploy)
+    /**
+     * Try to auto join a dev voice channel and begin listening to the developer
+     */
+    if (Environment.debug) {
+        if (Environment.discord.dev_guild_id && Environment.discord.dev_user_to_auto_listen) {
+            client.guilds.fetch(Environment.discord.dev_guild_id)
+                .then(deploy)
+                .then(async () => {
+                    const voiceChannel = client.guilds.cache.get(Environment.discord.dev_guild_id!)?.
+                        members.cache.get(Environment.discord.dev_user_to_auto_listen!)?.voice.channel;
+                    const textChannel = await client.channels.fetch(Environment.discord.dev_force_input_channel!)
+                    joinAndListen(recordable, Environment.discord.dev_user_to_auto_listen!, voiceChannel ?? undefined, textChannel as any)
+                })
+                .catch(console.warn);
+        }
+
+
+        console.log('Ready!');
     }
-    console.log('Ready!')
 });
 client.on(Events.MessageCreate, async (message) => {
     if (!message.guild) return;
@@ -69,7 +83,7 @@ client.on(Events.Error, console.warn);
 async function processTranscript(string: string | undefined): Promise<string | undefined> {
     var result = undefined;
     if (string) {
-        console.log("💬 processing transcript: ", string);
+        console.log("💬 Processing transcript: ", string);
         const regexCollection = Config.key_phrases.flatMap(phrase => `${phrase}`)
 
         regexCollection.forEach((regex) => {
@@ -96,7 +110,7 @@ export async function handleAudioStream(audioStream: Stream.Readable, voiceConne
         .then(queryItems)
         .then(items => onItemsFound(textChannelOutput, items, voiceConnection))
         .catch(error => {
-            console.error("Error in transcribe process", error);
+            console.error("❌ Error in transcribe process", error);
         })
 }
 
