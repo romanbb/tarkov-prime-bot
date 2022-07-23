@@ -14,9 +14,9 @@ import { textToSpeach } from './audio';
 import { embedForItems } from './text';
 
 const client = new Discord.Client({
-	intents: [
-        GatewayIntentBits.GuildVoiceStates, 
-        GatewayIntentBits.GuildMessages, 
+    intents: [
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildMessages,
         GatewayIntentBits.Guilds,
         GatewayIntentBits.MessageContent
     ],
@@ -27,44 +27,45 @@ client.on(Events.ClientReady, () => {
         client.guilds.fetch(Environment.discord.dev_guild_id)
             .then(deploy)
     }
-    console.log('Ready!')});
-    client.on(Events.MessageCreate, async (message) => {
-	if (!message.guild) return;
-	if (!client.application?.owner) await client.application?.fetch();
+    console.log('Ready!')
+});
+client.on(Events.MessageCreate, async (message) => {
+    if (!message.guild) return;
+    if (!client.application?.owner) await client.application?.fetch();
 
-	if (message.content.toLowerCase() === '!deploy' && message.author.id === client.application?.owner?.id) {
-		await deploy(message.guild);
-		await message.reply('Deployed!');
-	}
+    if (message.content.toLowerCase() === '!deploy' && message.author.id === client.application?.owner?.id) {
+        await deploy(message.guild);
+        await message.reply('Deployed!');
+    }
 });
 
 /**
  * The IDs of the users that can be recorded by the bot.
  */
- const recordable = new Set<string>();
+const recordable = new Set<string>();
 
- client.on(Events.InteractionCreate, async (interaction: Interaction) => {
-     if (!interaction.isChatInputCommand() || !interaction.guildId) return;
- 
-     const handler = interactionHandlers.get(interaction.commandName);
- 
-     try {
-         if (handler) {
-             await handler(interaction, recordable, client, getVoiceConnection(interaction.guildId));
-         } else {
-             await interaction.reply('Unknown command');
-         }
-     } catch (error) {
-         console.warn(error);
-     }
- });
- 
- client.on(Events.Error, console.warn);
+client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+    if (!interaction.isChatInputCommand() || !interaction.guildId) return;
 
- /**
-  * @param string transcript to look for phrases to pull keywords out of
-  * @returns the keyword to lookup if one was found
-  */
+    const handler = interactionHandlers.get(interaction.commandName);
+
+    try {
+        if (handler) {
+            await handler(interaction, recordable, client, getVoiceConnection(interaction.guildId));
+        } else {
+            await interaction.reply('Unknown command');
+        }
+    } catch (error) {
+        console.warn(error);
+    }
+});
+
+client.on(Events.Error, console.warn);
+
+/**
+ * @param string transcript to look for phrases to pull keywords out of
+ * @returns the keyword to lookup if one was found
+ */
 async function processTranscript(string: string | undefined): Promise<string | undefined> {
     var result = undefined;
     if (string) {
@@ -89,14 +90,14 @@ async function processTranscript(string: string | undefined): Promise<string | u
  * @param voiceConnection the voice connection to speak the result back
  * @param textChannelOutput the text channel to output result back
  */
-export async function handleAudioStream(audioStream: Stream.Readable,  voiceConnection: VoiceConnection | null, textChannelOutput: TextBasedChannel | null) {
+export async function handleAudioStream(audioStream: Stream.Readable, voiceConnection: VoiceConnection | null, textChannelOutput: TextBasedChannel | null) {
     transcribeStream(undefined, audioStream)
-                    .then(processTranscript)
-                    .then(queryItems)
-                    .then(items => onItemsFound(textChannelOutput, items, voiceConnection))
-                    .catch(error => {
-                        console.error("Error in transcribe process", error);
-                    })
+        .then(processTranscript)
+        .then(queryItems)
+        .then(items => onItemsFound(textChannelOutput, items, voiceConnection))
+        .catch(error => {
+            console.error("Error in transcribe process", error);
+        })
 }
 
 export async function onItemsFound(textChannel: TextBasedChannel | null, items: TarkovMarketItemResult[] | null, voiceConnection: VoiceConnection | null) {
@@ -121,3 +122,17 @@ export async function onItemsFound(textChannel: TextBasedChannel | null, items: 
 }
 
 void client.login(Environment.discord.token);
+
+const cleanup = (options: { exit?: boolean }) => {
+    client.guilds.cache.forEach((guild) => {
+        getVoiceConnection(guild.id)?.destroy();
+    });
+    if (options.exit) {
+        process.exit();
+    }
+}
+
+// cleanup bot on exit, disconnect from channel, etc
+process.addListener('exit', () => cleanup({ exit: true }));
+process.addListener('SIGINT', () => cleanup({ exit: true }));
+process.addListener('SIGABRT', () => cleanup({ exit: true }));
