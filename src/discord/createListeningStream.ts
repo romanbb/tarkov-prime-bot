@@ -1,9 +1,9 @@
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream';
-import { EndBehaviorType, VoiceReceiver } from '@discordjs/voice';
+import { AudioReceiveStream, EndBehaviorType, VoiceReceiver } from '@discordjs/voice';
 import type { User } from 'discord.js';
 import * as prism from 'prism-media';
-import type Stream from 'stream';
+import type Stream from 'node:stream';
 
 function getDisplayName(userId: string, user?: User) {
 	return user ? `${user.username}_${user.discriminator}` : userId;
@@ -33,7 +33,7 @@ export function saveVoice(receiver: VoiceReceiver, userId: string, user?: User) 
 
 	console.log(`👂 Started recording ${filename}`);
 
-	pipeline(opusStream as unknown as Stream.Readable, oggStream, out, (err) => {
+	pipeline(opusStream, oggStream, out, (err) => {
 		if (err) {
 			console.warn(`❌ Error recording file ${filename} - ${err.message}`);
 		} else {
@@ -43,7 +43,7 @@ export function saveVoice(receiver: VoiceReceiver, userId: string, user?: User) 
 }
 
 export function createListeningStream(receiver: VoiceReceiver, userId: string): Stream.Readable {
-	const opusStream = receiver.subscribe(userId, {
+	const opusStream: AudioReceiveStream = receiver.subscribe(userId, {
 		end: {
 			behavior: EndBehaviorType.AfterSilence,
 			duration: 1000,
@@ -59,7 +59,7 @@ export function createListeningStream(receiver: VoiceReceiver, userId: string): 
 		},
 	});
 
-	pipeline(opusStream as any, oggStream, (err) => {
+	pipeline(opusStream, oggStream, (err) => {
 		if (err) {
 			console.warn(`❌ Error recording stream ${err.message}`);
 		}
@@ -68,7 +68,7 @@ export function createListeningStream(receiver: VoiceReceiver, userId: string): 
 		// }
 	});
 
-    return oggStream as any;
+    return oggStream;
 
 
 }

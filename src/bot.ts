@@ -1,5 +1,5 @@
 
-import { getVoiceConnection, VoiceConnection } from '@discordjs/voice';
+import { getVoiceConnection, joinVoiceChannel, VoiceConnection } from '@discordjs/voice';
 import { GatewayIntentBits } from 'discord-api-types/v10';
 import Discord, { Events, Interaction, TextBasedChannel } from 'discord.js';
 import type Stream from 'stream';
