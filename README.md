@@ -1,6 +1,6 @@
 # Tarkov Prime Bot
 
-This is a Discord bot that allows you to lookup flea market prices with your voice.
+This is a Discord bot that allows you to lookup flea market prices with your voice. [Small demo](https://twitter.com/romanbb/status/1550151741034729473).
 
 ## How it works
 
