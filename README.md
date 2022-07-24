@@ -15,34 +15,47 @@ There's a helper script you can run to push updates to AWS.
 
 Make sure you check the status afterwords to see if there are any parsing failures. It needs to follow [these guidelines](https://docs.aws.amazon.com/transcribe/latest/dg/custom-vocabulary-create-table.html).
 
+If you plan to contribute to this list, please reach out to me and I can give you access to a master spreadsheet with items catagorized by sheets. There's an export script that generates `support/transcribe_vocab.txt`.
+
 ## Run it yourself
 
 ### Requirements
-1. Basic knowledge of Node/Javscript/AWS
+1. Basic knowledge of
+      - Node
+      - TypeScript
+      - AWS
 2. AWS Account (this will cost based on usage)
-
    1. Amazon Transcribe
-   2. Amazon Polly - TTS
-   3. S3: for storing/loading vocab model for Transcribe
+   1. Amazon Polly - TTS
+   1. S3: for storing/loading vocab model for Transcribe
+3. [Tarkov-Market](https://tarkov-market.com) 
+   - Your own API Key ($5/mo)
+4. Your own Discord App ID
 
-3. [Tarkov-Market](https://tarkov-market.com) API Key ($5/mo)
+### Run Locally
+
+#### Dev Mode
+Runs with `.env.dev` vars. Has ability to auto-join and start recording a preset user in a preset guild, outputing to a preset channel based on the environment variables.
+
+This wll build and run the service.
+
+      npm run dev
+
+#### Prod mode
+Just runs with node in prod environmment with `.env` loaded. Doesn't build.
+
+      npm run prod
 
 ### Deploy
 I am trying [fly.io](https://fly.io) to host this right now. You can deploy with:
 
       npm run deploy
 
+### Secrets & Credentials
+All secrets will be stored in `.env`/`.env.dev` file.
 
-### Credentials
-All secrets will be stored in `.env`. file.
-```
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_DEFAULT_REGION=
-
-DISCORD_TOKEN=
-TARKOV_MARKET_TOKEN=
-```
+For development the `.env.dev` file is used instead. For full reference of all the variables check out `src/config.env.ts`.
 
 ## TODO
 - Finish adding item voice models!
+- Session persistence (for seamless redeploys?)
