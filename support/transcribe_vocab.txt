@@ -244,8 +244,8 @@ ice-green			IceGreen
 max-energy			MaxEnergy
 rat-cola			RatCola
 tar-cola			TarCola
-big-tushonka		big-toosh-on-ka	beef stew large
 tushonka		toosh-on-ka	beef stew small
+big-tushonka		big-toosh-on-ka	beef stew large
 condensed-milk			cond. milk
 peas			
 herring		hair-ing	
@@ -256,7 +256,7 @@ squash
 super-water			superwater
 emelya		emilia	
 e.w.r.			EWR
-iskra		is-kruh	
+iskra		is-crap	
 mayo			
 m.r.e.			MRE
 grand			
@@ -267,6 +267,169 @@ oatflakes
 sugar			
 croutons			
 slickers			
+t.t.-zero-one			TT01
+a.c.r.o.p.-one			ACRO P-1
+comp-m.-four			CompM4
+h.-two			H-2
+t.-one			T-1
+pro			
+e.k.p.-eight-zero-two			EKP-8-02
+e.k.p.-eight-o.-two			EKP-8-02
+e.k.p.-eight-eighteen			EKP-8-18
+p.k.-o.-six			PK-06
+p.k.-zero-six			PK-06
+f.f.-three			FF3
+tac-thirty		tack-thirty	TAC30
+specter-d.r.			SpecterDR
+specter-d.r.-f.d.e.			SpecterDR FDE
+five-five-three			553
+e.x.p.s.-three			EXPS3
+h.h.s.-one			HHS-1
+h.h.s.-one-tan			HHS-1 Tan
+vudu			VUDU 1-6x24
+x.p.s.-three-zero			XPS3-0
+x.p.s.-three-o.			XPS3-0
+x.p.s.-three-two			XPS3-2
+u.t.g.			UTG
+h.a.m.r.		hammer	HAMR
+d.p.			DP
+compact-two-by-thirty-two			Compact 2x32
+a.d.o.-p.-four			ADO P4
+o.k.p.-seven			OKP-7
+o.k.p.-seven-dove			OKP-7 Dove
+prism			Prism 2.5x
+bravo-four			Bravo4
+romeo-four			Romeo4
+romeo-eight-t.			Romeo8T
+r.m.r.			RMR
+krechet		creh-sheh	
+p.k.-one-twenty			PK-120
+u.h.-one			UH-1
+p.s.-three-twenty			PS-320
+m.r.s.			MRS
+altyn		all-tin	Altyn
+altyn-face-shield			Altyn FS
+killa-helmet		kil-a-helmet	Maska-1SCh Killa
+killa-helmet-faceshield			1SCH FS
+maska-one-s.c.h.		mass-ka-one-ess-see-h	Maska-1Sch
+one-s.c.h.-faceshield			Maska-1ScH Killa FS
+rys-t		ris-tee	Rys-T
+rys-t-faceshield		ris-tee-face-shield	Rys-T FS
+shattered			
+vulkan			Vulkan-5
+vulkan-five			Vulkan-5
+hexgrid		hex-grid	
+killa-armor			6b13 M
+six-b.-one-three-m.			6b13 M
+six-b.-thirteen-assault			6b13 asault
+six-b.-twenty-three-two			6B23-2
+six-b.-fourty-three-six-a.			6B43 6A
+fort-armor			6B43 6A
+six-b.-fourty-seven			6B47
+six-b.-fourty-seven-d.f.l.			6B47 DFL
+gzhel-k.		gazelle-k	Ghzel-K
+gzhel		gazelle	Ghzel
+kirasa-n.		ki-rah-sah-n	kirasa-n
+kirasa		ki-rah-sah	kirasa-n
+press-armor			zhuk-3
+zhuk-six-a.		zuk-six-a	zhuk-6a
+zhuk		zuk	zhuk-6a
+bastion-plate			
+bomber			
+caiman-m.g.		cay-man-m-g	Caiman MG
+caiman-f.a.v.		cay-man-f-a-v	Caiman FAV
+applique		app-lick	applique
+a.f.-chops			AF Chops
+a.f.-ears			AF Ears
+airframe-tan			AirFrame Tan
+d.r.d.			DRD
+death-knight			
+ronin			
+bastion			
+defender			Defender
+defender-two			Defender
+redut-m.		ree-dut	Redut-M
+redut-t.-five		ree-dut-tee-five	Redut-T5
+kiver-m.		kee-ver-m	Kiver-M
+kiver		kee-ver	Kiver-M
+caiman		cayman	Caiman
+glorious			
+a.c.h.h.c			ACHHC
+ulach		you-lock	ULACH
+ulach-tan		you-lock-tan	ULACH Tan
+trooper			
+gen-four-assault			Gen4 Assault
+gen-four-full			Gen4 Full
+gen-four-h.m.k.			Gen4 HMK
+kiver-faceshield			Kiver FS
+slick			
+m.-fun			MF-UN
+t.c.-two-thousand-one			TC-2001
+t.c.-two-thousand-two			TC-2002
+t.c.-eight-hundren			TC 800
+h.-jelm			HJELM
+korund			Korund-VM
+thor-i.c.			THOR IC
+condor			
+gunsight			
+fast-m.t.			Fast MT
+fast-m.t.-tan			Fast MT Tan
+fast-ears			Fast Ears
+fast			
+fast-faceshield			fast FS
+slaap		slap	SLAAP
+exfil-faceshield			exfil fs
+exfil-ears			exfil ears
+exfil-black			exfil black
+exfil-c.b.			exfil cb
+untar		un-tar	untar
+vulkan-faceshield			vulkan-5 fs
+zish-faceshield			Zsh-1-2M FS
+zish			Zsh-1-2M
+gorilla			
+tactec		tack-tech	TacTec
+diaper			6B3TM-01M
+six-b.-five-fifteen			6B5-15
+six-b.-five-sixteen			6B5-16
+alpha			
+a.n.a.-m.-one		ana-m-one	ANA M1
+a.n.a.-m.-two		ana-m-two	ANA M2
+a-eighteen			A18
+c.p.c.-mod-two			CPC MOD.2
+azimut		azi-mutt	Azimut
+belt-combo			Belt Combo
+commando			
+blackrock			
+osprey			Osprey
+c.s.a.			CSA
+a.v.s.			AVS
+a.v.s.-m.b.a.v.			AVS MBAV
+c.p.c.-g.e.			CPC GE
+idea-rig			
+thunderbolt			
+triton			
+r.b.a.v.-a.f.			RBAV-AF
+m.m.a.c.			MMAC
+strandhogg		strand-hog	Strandhogg
+b.s.s.-m.k.-one			BSS-MK1
+d.-three-c.r.x.			D3CRX
+l.b.c.r.			LBCR
+l.b.c.r.-g.e.			LBCR GE
+bagariy		bag-are-ee	Bagariy
+plateframe-g.e.			PlateFrame GE
+m.-rig			MRig
+scav-vest			Scav Vest
+security			
+bank-robber			
+tarzan			
+c.r.m.k.-two-a.			CR MK2 (A)
+c.r.m.k-two-r.			CR MK2 (R)
+t.t.-s.k.			TT SK
+six-s.h.			6sh112 S-s
+umka		um-kah	umka
+m.p.p.v.			MPPV
+m.k.-three			MK3 TV-104
+t.v.-one-ten			TV-110
 s.a.s.			SAS
 s.s.d.			SSD
 flash-drive			flash drive
