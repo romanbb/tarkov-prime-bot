@@ -32,7 +32,8 @@ client.on(Events.ClientReady, () => {
                 .then(deploy)
                 .then(async () => {
                     const voiceChannel = client.guilds.cache.get(Environment.discord.auto_deploy_guild_id!)?.
-                        members.cache.get(Environment.discord.dev_user_to_auto_listen!)?.voice.channel;
+                        members.cache.get(Environment.discord.dev_user_to_auto_listen!)?.
+                        voice.channel;
                     const textChannel = await client.channels.fetch(Environment.discord.dev_force_input_channel!)
                     joinAndListen(recordable, Environment.discord.dev_user_to_auto_listen!, voiceChannel ?? undefined, textChannel as any)
                 })
