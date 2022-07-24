@@ -143,10 +143,11 @@ export async function onItemsFound(textChannel: TextBasedChannel | null, items: 
 void client.login(Environment.discord.token);
 
 const cleanup = (options: { exit?: boolean }) => {
-    client.guilds.cache.forEach((guild) => {
-        getVoiceConnection(guild.id)?.destroy();
-    });
+    // client.guilds.cache.forEach((guild) => {
+    //     getVoiceConnection(guild.id)?.destroy();
+    // });
     if (options.exit) {
+        console.log("💀 Exiting by request from system");
         process.exit();
     }
 }

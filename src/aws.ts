@@ -8,28 +8,33 @@ import type Stream from 'stream'
 
 const sts = new AWS.STS();
 
-let transcribeClient: TranscribeStreamingClient;
-let pollyClient: PollyClient;
+let transcribeClient: TranscribeStreamingClient | undefined;
+let pollyClient: PollyClient | undefined;
 let credentials: AWS.STS.Types.GetSessionTokenResponse | undefined;
 
 const getCredentials = async (): Promise<AWS.STS.GetSessionTokenResponse> => {
     if (credentials) {
         const expiry = credentials.Credentials?.Expiration.getTime();
-        if (expiry && expiry > new Date().getTime()) {
-            console.log("AWS token expired, renewing")
+        const now = new Date().getTime();
+        if (expiry && now > expiry) {
             credentials = undefined;
+            transcribeClient = undefined;
+            pollyClient = undefined;
         } else {
             return credentials;
         }
     }
     const params: AWS.STS.Types.GetSessionTokenRequest = {
-        // DurationSeconds: 12 * 60 * 60, // 12 hours,
-        DurationSeconds: 900, // 15m
+        DurationSeconds: 12 * 60 * 60, // 12 hours,
+        // DurationSeconds: 900, // 15m
     };
 
     try {
         credentials = await sts.getSessionToken(params).promise()
     } catch (err) {
+        credentials = undefined;
+        transcribeClient = undefined;
+        pollyClient = undefined;
         console.log("error getting session token", err)
         throw err;
     }
@@ -81,8 +86,11 @@ const aqcuireStreamingClient = async (): Promise<TranscribeStreamingClient> => {
 }
 
 export async function synthesizeSpeech(text: string): Promise<Stream.Readable> {
-    await aqcuirePollyClient();
-    const response = await pollyClient.send(new SynthesizeSpeechCommand({
+    const client = await aqcuirePollyClient();
+    if (!client) {
+        throw Error("Unable to aqcuire polly client");
+    }
+    const response = await client.send(new SynthesizeSpeechCommand({
         Text: text,
         Engine: "standard",
         LanguageCode: "en-US",
@@ -120,7 +128,12 @@ export async function transcribeStream(filename: string | undefined, stream: Str
         VocabularyName: "tarkov",
         AudioStream: audioStream(),
     });
-    const response = await (await aqcuireStreamingClient()).send(command);
+    const client = await aqcuireStreamingClient();
+    if (!client) {
+        throw Error("Unable to aqcuire streaming client");
+    }
+
+    const response = await client.send(command);
     if (response.TranscriptResultStream) {
         for await (const event of response.TranscriptResultStream) {
             if (event.TranscriptEvent?.Transcript?.Results) {
