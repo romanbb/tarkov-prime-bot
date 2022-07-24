@@ -44,7 +44,7 @@ Bear-buddy			BEAR Buddy
 Book			
 bolts			
 vitamins			multivitamins
-h-two-o.-two			
+h-two-o.-two			H2O2
 fire-clean			FireKlean
 fourty-two			42nd signature
 tank-battery			Tank Battery
@@ -272,7 +272,7 @@ a.c.r.o.p.-one			ACRO P-1
 comp-m.-four			CompM4
 h.-two			H-2
 t.-one			T-1
-pro			
+pro			PRO
 e.k.p.-eight-zero-two			EKP-8-02
 e.k.p.-eight-o.-two			EKP-8-02
 e.k.p.-eight-eighteen			EKP-8-18
@@ -302,7 +302,7 @@ bravo-four			Bravo4
 romeo-four			Romeo4
 romeo-eight-t.			Romeo8T
 r.m.r.			RMR
-krechet		creh-sheh	
+krechet		creh-sheh	Krechet
 p.k.-one-twenty			PK-120
 u.h.-one			UH-1
 p.s.-three-twenty			PS-320
@@ -315,10 +315,10 @@ maska-one-s.c.h.		mass-ka-one-ess-see-h	Maska-1Sch
 one-s.c.h.-faceshield			Maska-1ScH Killa FS
 rys-t		ris-tee	Rys-T
 rys-t-faceshield		ris-tee-face-shield	Rys-T FS
-shattered			
+shattered			Shattered
 vulkan			Vulkan-5
 vulkan-five			Vulkan-5
-hexgrid		hex-grid	
+hexgrid		hex-grid	Hexgrid
 killa-armor			6b13 M
 six-b.-one-three-m.			6b13 M
 six-b.-thirteen-assault			6b13 asault
@@ -334,8 +334,8 @@ kirasa		ki-rah-sah	kirasa-n
 press-armor			zhuk-3
 zhuk-six-a.		zuk-six-a	zhuk-6a
 zhuk		zuk	zhuk-6a
-bastion-plate			
-bomber			
+bastion-plate			Bastion Plate
+bomber			Bomber
 caiman-m.g.		cay-man-m-g	Caiman MG
 caiman-f.a.v.		cay-man-f-a-v	Caiman FAV
 applique		app-lick	applique
@@ -343,9 +343,9 @@ a.f.-chops			AF Chops
 a.f.-ears			AF Ears
 airframe-tan			AirFrame Tan
 d.r.d.			DRD
-death-knight			
-ronin			
-bastion			
+death-knight			Death Knight
+ronin			Ronin
+bastion			Bastion
 defender			Defender
 defender-two			Defender
 redut-m.		ree-dut	Redut-M
@@ -353,16 +353,16 @@ redut-t.-five		ree-dut-tee-five	Redut-T5
 kiver-m.		kee-ver-m	Kiver-M
 kiver		kee-ver	Kiver-M
 caiman		cayman	Caiman
-glorious			
-a.c.h.h.c			ACHHC
+glorious			Glorious
+a.c.h.h.c.			ACHHC
 ulach		you-lock	ULACH
 ulach-tan		you-lock-tan	ULACH Tan
-trooper			
+trooper			Trooper
 gen-four-assault			Gen4 Assault
 gen-four-full			Gen4 Full
 gen-four-h.m.k.			Gen4 HMK
 kiver-faceshield			Kiver FS
-slick			
+slick			Slick
 m.-fun			MF-UN
 t.c.-two-thousand-one			TC-2001
 t.c.-two-thousand-two			TC-2002
@@ -370,12 +370,12 @@ t.c.-eight-hundren			TC 800
 h.-jelm			HJELM
 korund			Korund-VM
 thor-i.c.			THOR IC
-condor			
-gunsight			
+condor			Condor
+gunsight			Gunsight
 fast-m.t.			Fast MT
 fast-m.t.-tan			Fast MT Tan
 fast-ears			Fast Ears
-fast			
+fast			Fast
 fast-faceshield			fast FS
 slaap		slap	SLAAP
 exfil-faceshield			exfil fs
@@ -386,7 +386,7 @@ untar		un-tar	untar
 vulkan-faceshield			vulkan-5 fs
 zish-faceshield			Zsh-1-2M FS
 zish			Zsh-1-2M
-gorilla			
+gorilla			Gorilla
 tactec		tack-tech	TacTec
 diaper			6B3TM-01M
 six-b.-five-fifteen			6B5-15
@@ -394,7 +394,7 @@ six-b.-five-sixteen			6B5-16
 alpha			
 a.n.a.-m.-one		ana-m-one	ANA M1
 a.n.a.-m.-two		ana-m-two	ANA M2
-a-eighteen			A18
+a.-eighteen			A18
 c.p.c.-mod-two			CPC MOD.2
 azimut		azi-mutt	Azimut
 belt-combo			Belt Combo
@@ -436,11 +436,11 @@ flash-drive			flash drive
 s.-diary			SDiary
 manual			
 weapon-repair-kit			
-scorpius		scorp-ee-us	
+scorpius		scorp-ee-us	Scorpius
 a.g.s.-seventy-four			AGS-74
 a.g.r.-fourty-seven			AGR47
 m.g.-fourty-seven-a.k.			MG-47 AK
-m.g.-fourty-seven-a.k.-red			
+m.g.-fourty-seven-a.k.-red			MG-47 AK Red
 m.o.e.-a.k.			MOE AK
 a.k.-e.p.g.			AK-EPG
 s.a.w.			SAW
@@ -456,15 +456,15 @@ f.-one-.s.t.-one			F1 St1
 f.-one-.s.t.-two-p.c.			F1 ST2 PC
 f.-one-.s.t.-two			F1 ST2
 battle-grip			Battle Grip
-ergo			
+ergo			Ergo
 m.o.e.a.r.-fifteen			MOE AR15
-gral-s		grall-ess	
+gral-s		grall-ess	GRAL S
 t.d.-hex			TD Hex
 t.d.-one-two-zero-zero-zero-one			TD120001
 r.-fourty-three-val			R43 VAL
 pro-seven-hundren			Pro700
 ultima			
-mosin-pistol-grip			
+mosin-pistol-grip			Mosin Pistol Grip
 t-fivethousand-m.			T-5000M
 p.-two-two-six-axelson			P226 Axelson
 p.-two-two-six-f.d.e.			P226 FDE
@@ -473,6 +473,27 @@ p.-two-two-six-c.l.			P226 CL
 p.-two-two-six-hogue			P226 Hogue
 p.-two-two-six-elite			P226 Elite
 p.-two-two-six-black			P226 Black
+a.n.-p.e.q.-fifteen			AN/PEQ-15
+a.n.-p.e.q.-two			AN/PEQ-2
+x.h.p.-thirty-five			XHP35
+g.t.l.-twenty-one			GTL 21
+l.s.-three-two-one			LS321
+l.s.-three-twenty-one			LS321
+w.m.x.-two-hundred			WMX200
+l.a.-five-b.-p.e.q.			LA-5B/PEQ
+t.b.l.			TBL
+baldr-pro		ball-der-pro	BaldrPro
+d.-bal-p.l.			DBAL-PL
+l.a.s.-tac-two			LAS/TAC 2
+x-fourhundred			X400
+x.c.-one			XC1
+t.t.-precision			TT Precision
+w.f.-five-o.-one-b.			WF501B
+raptar		rap-tar	RAPTAR
+k.-two-i.k.s.			K-2IKS
+klesch-two-p.		clash-two-p	Klesch-2P
+klesch-two-u.		clash-two-u	Klesch-2U
+perst-three			Perst-3
 m.v.f.-zero-zero-one			MVF001
 a.x.m.c.-pad			AXMC pad
 ash-twelve			ASh-12
