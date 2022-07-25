@@ -14,7 +14,7 @@ const recording = new Set<Snowflake>();
  * @param voiceChannel 
  * @param textChannel 
  */
-export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflake, voiceChannel?: VoiceBasedChannel, textChannel?: TextBasedChannel) {
+export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflake, voiceChannel?: VoiceBasedChannel, textChannel?: TextChannel) {
 	if (!voiceChannel) {
 		throw Error("need a voice channel to join and listen");
 	}

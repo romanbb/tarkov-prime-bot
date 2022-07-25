@@ -1,7 +1,7 @@
 
 import { getVoiceConnection, VoiceConnection } from '@discordjs/voice';
 import { GatewayIntentBits } from 'discord-api-types/v10';
-import Discord, { Events, Interaction, TextBasedChannel } from 'discord.js';
+import Discord, { BaseGuildTextChannel, Events, GuildTextBasedChannel, Interaction, TextBasedChannel, TextBasedChannelTypes, TextChannel } from 'discord.js';
 import type Stream from 'stream';
 import { textToSpeach } from './audio';
 import { transcribeStream } from './aws';
@@ -34,8 +34,13 @@ client.on(Events.ClientReady, () => {
                     const voiceChannel = client.guilds.cache.get(Environment.discord.auto_deploy_guild_id!)?.
                         members.cache.get(Environment.discord.dev_user_to_auto_listen!)?.
                         voice.channel;
-                    const textChannel = await client.channels.fetch(Environment.discord.dev_force_input_channel!)
-                    joinAndListen(recordable, Environment.discord.dev_user_to_auto_listen!, voiceChannel ?? undefined, textChannel as any)
+                    const textChannel = await client.channels.fetch(Environment.discord.dev_force_input_channel!) as TextChannel;
+                    joinAndListen(recordable, Environment.discord.dev_user_to_auto_listen!, voiceChannel ?? undefined, textChannel);
+
+                    // queryItems("sas")
+                    //     .then(items => onItemsFound(textChannel, items, null))
+                    //     .catch(console.warn);
+
                 })
                 .catch(console.warn);
         } else if (Environment.discord.auto_deploy_guild_id) {
@@ -109,7 +114,11 @@ async function processTranscript(string: string | undefined): Promise<string | u
  * @param voiceConnection the voice connection to speak the result back
  * @param textChannelOutput the text channel to output result back
  */
-export async function handleAudioStream(audioStream: Stream.Readable, voiceConnection: VoiceConnection | null, textChannelOutput: TextBasedChannel | null) {
+export async function handleAudioStream(
+    audioStream: Stream.Readable,
+    voiceConnection: VoiceConnection | null,
+    textChannelOutput: TextBasedChannel | GuildTextBasedChannel | null) {
+
     transcribeStream(undefined, audioStream)
         .then(processTranscript)
         .then(queryItems)
@@ -119,7 +128,11 @@ export async function handleAudioStream(audioStream: Stream.Readable, voiceConne
         })
 }
 
-export async function onItemsFound(textChannel: TextBasedChannel | null, items: TarkovMarketItemResult[] | null, voiceConnection: VoiceConnection | null) {
+export async function onItemsFound(
+    textChannel: TextBasedChannel | GuildTextBasedChannel | null,
+    items: TarkovMarketItemResult[] | null,
+    voiceConnection: VoiceConnection | null) {
+
     if (textChannel && items) {
         const embed = embedForItems(items);
         if (embed) {
