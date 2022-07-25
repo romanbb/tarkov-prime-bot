@@ -1,6 +1,6 @@
 import { Embed, EmbedBuilder } from "discord.js";
 import { TarkovMarketItemResult } from "./tarkov-market";
-import { formatMoney } from "./utils";
+import { calculateTax, formatMoney } from "./utils";
 
 export function embedForItems(items: TarkovMarketItemResult[] | null): EmbedBuilder | null {
     if (!items || !items.length || !items[0]) {
@@ -13,16 +13,31 @@ export function embedForItems(items: TarkovMarketItemResult[] | null): EmbedBuil
         .setDescription(mainItem.name)
         .setAuthor({ name: "Tarkov Prime Flea Lookup", url: mainItem.link })
         // .setImage(mainItem.imgBig)
-        .setThumbnail(mainItem.icon)
-        .addFields(
-            { name: "Average 24h Price", value: formatMoney(mainItem.avg24hPrice), inline: true },
-            { name: '\u200B', value: '\u200B', inline: true },
-            { name: "Per Slot", value: formatMoney(mainItem.avg24hPrice / mainItem.slots), inline: true },
+        .setThumbnail(mainItem.icon);
 
-            { name: "Sell to " + mainItem.traderName, value: formatMoney(mainItem.traderPrice, mainItem.traderPriceCur), inline: true },
-            { name: '\u200B', value: '\u200B', inline: true },
-            { name: "Per Slot", value: formatMoney(mainItem.traderPrice / mainItem.slots, mainItem.traderPriceCur), inline: true },
+    const tax = calculateTax(mainItem.basePrice, mainItem.avg24hPrice);
+    if (!mainItem.bannedOnFlea) {
+
+        embed.addFields(
+            { name: "Average 24h Price", value: formatMoney(mainItem.avg24hPrice), inline: true },
+            // { name: '\u200B', value: '\u200B', inline: true },
+            { name: 'Tax', value: `${formatMoney(tax)}`, inline: true },
+            { name: "Per Slot w/tax", value: formatMoney((mainItem.avg24hPrice - tax) / mainItem.slots), inline: true },
         );
+    }
+
+    embed.addFields(
+        { name: "Sell to " + mainItem.traderName, value: formatMoney(mainItem.traderPrice, mainItem.traderPriceCur), inline: true },
+        { name: '\u200B', value: '\u200B', inline: true },
+        { name: "Per Slot", value: formatMoney(mainItem.traderPrice / mainItem.slots, mainItem.traderPriceCur), inline: true },
+    );
+
+    if (mainItem.bannedOnFlea && mainItem.avg24hPrice - tax < mainItem.traderPriceRub) {
+        // sell to trader better deal
+        embed.addFields(
+            { name: "\u200B" + mainItem.traderName, value: "Selling to trader is a better profit!" },
+        )
+    }
 
     if (items[1]) {
         embed.addFields(
