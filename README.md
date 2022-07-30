@@ -19,6 +19,16 @@ If you plan to contribute to this list, please reach out to me and I can give yo
 
 ## Run it yourself
 
+### Commands
+You first need to !deploy the bot. Only the owner of the app can deploy it. It will try to auto-deploy if you have the guild id configured.
+
+1. `/join` to join your voice channel.
+2. `/start` to tell the bot to start recording you. It's opt-in.
+
+3. `/stop` stop listening
+4. `/leave` leave the voice channel
+5. `/check` do a text-based lookup
+
 ### Requirements
 1. Basic knowledge of
       - Node
@@ -28,9 +38,11 @@ If you plan to contribute to this list, please reach out to me and I can give yo
    1. Amazon Transcribe
    1. Amazon Polly - TTS
    1. S3: for storing/loading vocab model for Transcribe
-3. [Tarkov-Market](https://tarkov-market.com) 
-   - Your own API Key ($5/mo)
-4. Your own Discord App ID
+3. Your own Discord App ID
+
+### Flea Market Data
+
+Currently two sources available. By default it will use [tarkov.dev](https://tarkov.dev). But it also has support for [Tarkov-Market](https://tarkov-market.com), but you need to have an API key to use Tarkov-Market, which costs $5/mo. 
 
 ### Run Locally
 
