@@ -12,6 +12,8 @@ import { interactionHandlers, joinAndListen } from './discord/interactions';
 import { queryItems, TarkovMarketItemResult } from './tarkov-market';
 import { embedForItems } from './text';
 import { calculateTax, kFormatter } from './utils';
+import * as TarkovDev from './tarkov-dev.types'
+import { queryItem as queryItemsTarkovDev, embedForItems as embedForItemsTarkovDev, getTtsString } from './tarkov-dev';
 
 const client = new Discord.Client({
     intents: [
@@ -28,22 +30,26 @@ client.on(Events.ClientReady, () => {
      */
     if (Environment.debug) {
         if (Environment.discord.auto_deploy_guild_id && Environment.discord.dev_user_to_auto_listen) {
-            // client.guilds.fetch(Environment.discord.auto_deploy_guild_id)
-            //     .then(deploy)
-            //     .then(async () => {
-            //             const voiceChannel = client.guilds.cache.get(Environment.discord.auto_deploy_guild_id!)?.
-            //                 members.cache.get(Environment.discord.dev_user_to_auto_listen!)?.
-            //                 voice.channel;
-            //             const textChannel = await client.channels.fetch(Environment.discord.dev_force_input_channel!) as TextChannel;
-            //             // if (voiceChannel) {   
-            //             //     joinAndListen(recordable, Environment.discord.dev_user_to_auto_listen!, voiceChannel ?? undefined, textChannel);
-            //             // }
+            client.guilds.fetch(Environment.discord.auto_deploy_guild_id)
+                .then(deploy)
+                .then(async () => {
+                    const voiceChannel = client.guilds.cache.get(Environment.discord.auto_deploy_guild_id!)?.
+                        members.cache.get(Environment.discord.dev_user_to_auto_listen!)?.
+                        voice.channel;
+                    const textChannel = await client.channels.fetch(Environment.discord.dev_force_input_channel!) as TextChannel;
+                    if (voiceChannel) {
+                        joinAndListen(recordable, Environment.discord.dev_user_to_auto_listen!, voiceChannel ?? undefined, textChannel);
+                    }
 
-            //             queryItems("ulach")
-            //                 .then(items => onItemsFound(textChannel, items, null))
-            //                 .then();
-            //     })
-            //     .catch(console.warn);
+                    queryItemsTarkovDev("SJ6")
+                        .then(items => onItemsFoundForTarkovDev(textChannel, items, null))
+                        .catch(console.warn)
+
+                    //queryItems("ulach")
+                    //    .then(items => onItemsFoundForTarkovMarket(textChannel, items, null))
+                    //    .then();
+                })
+                .catch(console.warn);
 
         } else if (Environment.discord.auto_deploy_guild_id) {
             // still only one consumer :D
@@ -123,14 +129,32 @@ export async function handleAudioStream(
 
     transcribeStream(undefined, audioStream)
         .then(processTranscript)
-        .then(queryItems)
-        .then(items => onItemsFound(textChannelOutput, items, voiceConnection))
+        .then(queryItemsTarkovDev)
+        .then(items => onItemsFoundForTarkovDev(textChannelOutput, items, voiceConnection))
         .catch(error => {
             console.error("❌ Error in transcribe process", error);
         })
 }
 
-export async function onItemsFound(
+export async function onItemsFoundForTarkovDev(
+    textChannel: TextBasedChannel | GuildTextBasedChannel | null,
+    items: TarkovDev.Item[] | null,
+    voiceConnection: VoiceConnection | null) {
+    if (textChannel && items) {
+        const embed = embedForItemsTarkovDev(items);
+        if (embed) {
+            textChannel.send({ embeds: [embed] })
+        }
+    }
+    if (voiceConnection && items?.[0]) {
+        const speech = getTtsString(items[0])
+        if (speech) {
+            textToSpeach(speech, voiceConnection)
+        }
+    }
+}
+
+export async function onItemsFoundForTarkovMarket(
     textChannel: TextBasedChannel | GuildTextBasedChannel | null,
     items: TarkovMarketItemResult[] | null,
     voiceConnection: VoiceConnection | null) {
