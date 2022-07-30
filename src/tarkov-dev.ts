@@ -72,7 +72,7 @@ export function getTtsString(mainItem: Types.Item | null) {
     } else {
 
         const tax = calculateTax(mainItem.basePrice, mainItem.avg24hPrice ?? 0);
-        if (mainItem.avg24hPrice || 0 - tax < bestTrader.priceRUB! && !bestTrader.vendor.name.includes("Flea")) {
+        if (mainItem.avg24hPrice && mainItem.avg24hPrice - tax < bestTrader.priceRUB!) {
             // sell to trader better deal
             text = `${mainItem.shortName} sells to ${bestTrader.vendor.name} for ${kFormatter(bestTrader.priceRUB!)} with tax evasion.`;
         } else {
