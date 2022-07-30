@@ -9,11 +9,10 @@ import Environment from './config.env';
 import Config from './config.json';
 import { deploy } from './discord/deploy';
 import { interactionHandlers, joinAndListen } from './discord/interactions';
-import { queryItems, TarkovMarketItemResult } from './tarkov-market';
-import { embedForItems } from './text';
+import { queryItems as queryItemsTarkovMarket, embedForItems as embedForItemsTarkovMarket, TarkovMarketItemResult, getTtsString as getTtsStringTarkovMarket } from './flea/tarkov-market';
 import { calculateTax, kFormatter } from './utils';
-import * as TarkovDev from './tarkov-dev.types'
-import { queryItem as queryItemsTarkovDev, embedForItems as embedForItemsTarkovDev, getTtsString } from './tarkov-dev';
+import * as TarkovDev from './flea/tarkov-dev.types'
+import { queryItem as queryItemsTarkovDev, embedForItems as embedForItemsTarkovDev, getTtsString as getTtsStringTarkovDev } from './flea/tarkov-dev';
 
 const client = new Discord.Client({
     intents: [
@@ -129,11 +128,25 @@ export async function handleAudioStream(
 
     transcribeStream(undefined, audioStream)
         .then(processTranscript)
-        .then(queryItemsTarkovDev)
-        .then(items => onItemsFoundForTarkovDev(textChannelOutput, items, voiceConnection))
+        .then(query => handleQueryItemsInternal(query, voiceConnection, textChannelOutput))
         .catch(error => {
             console.error("❌ Error in transcribe process", error);
         })
+}
+
+async function handleQueryItemsInternal(
+    query: string | undefined,
+    voiceConnection: VoiceConnection | null,
+    textChannelOutput: TextBasedChannel | GuildTextBasedChannel | null) {
+    if (Config.flea_source === "tarkov_dev") {
+        return queryItemsTarkovDev(query)
+            .then(items => onItemsFoundForTarkovDev(textChannelOutput, items, voiceConnection))
+    } else if (Config.flea_source === "tarkov_market") {
+        return queryItemsTarkovMarket(query)
+            .then(items => onItemsFoundForTarkovMarket(textChannelOutput, items, voiceConnection))
+    } else {
+        throw new Error("⚠️ config.json misconfigured!! -- please set 'flea_source' to a proper value")
+    }
 }
 
 export async function onItemsFoundForTarkovDev(
@@ -147,7 +160,7 @@ export async function onItemsFoundForTarkovDev(
         }
     }
     if (voiceConnection && items?.[0]) {
-        const speech = getTtsString(items[0])
+        const speech = getTtsStringTarkovDev(items[0])
         if (speech) {
             textToSpeach(speech, voiceConnection)
         }
@@ -160,7 +173,7 @@ export async function onItemsFoundForTarkovMarket(
     voiceConnection: VoiceConnection | null) {
 
     if (textChannel && items) {
-        const embed = embedForItems(items);
+        const embed = embedForItemsTarkovMarket(items);
         if (embed) {
             textChannel.send({ embeds: [embed] });
         }
@@ -168,21 +181,10 @@ export async function onItemsFoundForTarkovMarket(
     if (voiceConnection && items && items[0]) {
         const mainItem = items[0];
 
-        let text;
-        if (mainItem.bannedOnFlea) {
-            text = `${mainItem.shortName} sells to ${mainItem.traderName} for ${kFormatter(mainItem.traderPrice)}`;
-        } else {
-
-            const tax = calculateTax(mainItem.basePrice, mainItem.avg24hPrice);
-            if (mainItem.avg24hPrice - tax < mainItem.traderPriceRub) {
-                // sell to trader better deal
-                text = `${mainItem.shortName} sells to ${mainItem.traderName} for ${kFormatter(mainItem.traderPrice)} with tax evasion.`;
-            } else {
-                text = `${mainItem.shortName} going for ${kFormatter(mainItem.avg24hPrice)}.`;
-            }
+        const text = getTtsStringTarkovMarket(mainItem)
+        if (text) {
+            textToSpeach(text, voiceConnection);
         }
-
-        textToSpeach(text, voiceConnection);
     }
 }
 

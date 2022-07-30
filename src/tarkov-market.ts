@@ -34,10 +34,9 @@ const axiosClient =  axios.create({
     baseURL: 'https://tarkov-market.com/api/v1/',
     timeout: 5000,
     headers:  {
-        'x-api-key': Environment.tarkov_market.token
+        'x-api-key': Environment.flea.tarkov_market.token
     }
   });
-
 
 export async function queryItemSummary(item?: string): Promise<string | null> {
     if (item) {

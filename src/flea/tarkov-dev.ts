@@ -1,12 +1,12 @@
 import { EmbedBuilder } from 'discord.js'
 import { request, gql } from 'graphql-request'
 import * as Types from './tarkov-dev.types'
-import { calculateTax, formatMoney, kFormatter } from './utils'
+import { calculateTax, formatMoney, kFormatter } from '../utils'
 
 
 export async function queryItem(query: string | undefined): Promise<Types.Item[] | null> {
     if (!query) {
-        return null 
+        return null
     }
     const gqlQ = gql`
     {
@@ -81,7 +81,6 @@ export function getTtsString(mainItem: Types.Item | null) {
     }
 
     return text;
-
 }
 
 

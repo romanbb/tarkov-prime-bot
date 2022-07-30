@@ -13,10 +13,14 @@ export default {
         dev_force_input_channel: process.env.DISCORD_DEV_OUTPUT_CHANNEL,
         dev_user_to_auto_listen: process.env.DISCORD_DEV_USER_AUTO_LISTEN
     },
-    tarkov_market: {
-        token: process.env.TARKOV_MARKET_TOKEN ?? ""
+    flea: {
+        tarkov_market: {
+            token: process.env.TARKOV_MARKET_TOKEN ?? ""
+        }
     },
     debug: process.env.NODE_ENV !== "production"
 
 
 }
+
+
