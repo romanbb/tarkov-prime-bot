@@ -41,9 +41,9 @@ client.on(Events.ClientReady, () => {
                         joinAndListen(recordable, Environment.discord.dev_user_to_auto_listen!, voiceChannel ?? undefined, textChannel);
                     }
 
-                    queryItemsTarkovDev("SJ6")
-                        .then(items => onItemsFoundForTarkovDev(textChannel, items, null))
-                        .catch(console.warn)
+                    // queryItemsTarkovDev("SJ6")
+                    //     .then(items => onItemsFoundForTarkovDev(textChannel, items, null))
+                    //     .catch(console.warn)
 
                     //queryItems("ulach")
                     //    .then(items => onItemsFoundForTarkovMarket(textChannel, items, null))
