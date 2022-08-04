@@ -1,6 +1,6 @@
 import axios from "axios";
 import { EmbedBuilder } from "discord.js";
-import { calculateTax, formatMoney, kFormatter } from "src/utils";
+import { calculateTax, formatMoney, kFormatter } from "../utils";
 import Environment from '../config.env';
 
 export interface TarkovMarketItemResult {
@@ -32,13 +32,13 @@ export interface TarkovMarketItemResult {
     wikiLink: string;
 }
 
-const axiosClient =  axios.create({
+const axiosClient = axios.create({
     baseURL: 'https://tarkov-market.com/api/v1/',
     timeout: 5000,
-    headers:  {
+    headers: {
         'x-api-key': Environment.flea.tarkov_market.token
     }
-  });
+});
 
 export async function queryItemSummary(item?: string): Promise<string | null> {
     if (item) {

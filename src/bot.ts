@@ -1,7 +1,7 @@
 
 import { getVoiceConnection, VoiceConnection } from '@discordjs/voice';
 import { GatewayIntentBits } from 'discord-api-types/v10';
-import Discord, { BaseGuildTextChannel, Events, GuildTextBasedChannel, Interaction, TextBasedChannel, TextBasedChannelTypes, TextChannel } from 'discord.js';
+import Discord, { Events, GuildTextBasedChannel, Interaction, TextBasedChannel, TextChannel } from 'discord.js';
 import type Stream from 'stream';
 import { textToSpeach } from './audio';
 import { transcribeStream } from './aws';
@@ -10,7 +10,6 @@ import Config from './config.json';
 import { deploy } from './discord/deploy';
 import { interactionHandlers, joinAndListen } from './discord/interactions';
 import { queryItems as queryItemsTarkovMarket, embedForItems as embedForItemsTarkovMarket, TarkovMarketItemResult, getTtsString as getTtsStringTarkovMarket } from './flea/tarkov-market';
-import { calculateTax, kFormatter } from './utils';
 import * as TarkovDev from './flea/tarkov-dev.types'
 import { queryItem as queryItemsTarkovDev, embedForItems as embedForItemsTarkovDev, getTtsString as getTtsStringTarkovDev } from './flea/tarkov-dev';
 
