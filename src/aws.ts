@@ -43,10 +43,10 @@ const getCredentials = async (): Promise<AWS.STS.GetSessionTokenResponse> => {
 }
 
 const aqcuirePollyClient = async (): Promise<PollyClient> => {
+    const { Credentials } = await getCredentials();
     if (pollyClient) {
         return pollyClient;
     }
-    const { Credentials } = await getCredentials();
     if (Credentials) {
         pollyClient = new PollyClient({
             region: Environment.aws.defaultRegion,
@@ -64,11 +64,11 @@ const aqcuirePollyClient = async (): Promise<PollyClient> => {
 }
 
 const aqcuireStreamingClient = async (): Promise<TranscribeStreamingClient> => {
+    const { Credentials } = await getCredentials();
     if (transcribeClient) {
         return transcribeClient;
     }
 
-    const { Credentials } = await getCredentials();
     if (Credentials) {
         transcribeClient = new TranscribeStreamingClient({
             region: Environment.aws.defaultRegion,
