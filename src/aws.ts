@@ -85,7 +85,7 @@ const aqcuireStreamingClient = async (): Promise<TranscribeStreamingClient> => {
     return transcribeClient
 }
 
-export async function synthesizeSpeech(text: string): Promise<Stream.Readable> {
+export async function synthesizeSpeech(text: string): Promise<Stream.Readable | ReadableStream | Blob | undefined> {
     const client = await aqcuirePollyClient();
     if (!client) {
         throw Error("Unable to aqcuire polly client");
@@ -98,7 +98,11 @@ export async function synthesizeSpeech(text: string): Promise<Stream.Readable> {
         VoiceId: "Justin"
     }));
 
-    return response.AudioStream;
+    const stream = response.AudioStream;
+    if (!stream) {
+        return undefined;
+    }
+    return stream;
 }
 
 export async function transcribeStream(filename: string | undefined, stream: Stream.Readable): Promise<string | undefined> {
@@ -138,6 +142,7 @@ export async function transcribeStream(filename: string | undefined, stream: Str
         for await (const event of response.TranscriptResultStream) {
             if (event.TranscriptEvent?.Transcript?.Results) {
                 const results = event.TranscriptEvent.Transcript.Results;
+                results.forEach(item => console.log("got item", item.Alternatives, "partial: ", item.IsPartial));
                 // right now we filter out partials
                 // the downside is that it takes a while for the text processing to give the final result
                 const parsedResults = results
@@ -149,7 +154,6 @@ export async function transcribeStream(filename: string | undefined, stream: Str
                     return parsedResults[0].Transcript;
                 }
 
-                // parsedResults.forEach(item => console.log("got item", item.Transcript));
 
             }
         }

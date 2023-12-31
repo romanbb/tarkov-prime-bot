@@ -27,7 +27,9 @@ client.on(Events.ClientReady, () => {
      * Try to auto join a dev voice channel and begin listening to the developer
      */
     if (Environment.debug) {
+        console.log("Running with debug")
         if (Environment.discord.auto_deploy_guild_id && Environment.discord.dev_user_to_auto_listen) {
+            console.log("Deploying to ", Environment.discord.auto_deploy_guild_id)
             client.guilds.fetch(Environment.discord.auto_deploy_guild_id)
                 .then(deploy)
                 .then(async () => {
