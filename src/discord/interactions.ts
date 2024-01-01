@@ -1,11 +1,13 @@
-import { entersState, getVoiceConnection, joinVoiceChannel, VoiceConnection, VoiceConnectionStatus } from '@discordjs/voice';
-import { Client, CommandInteraction, GuildMember, Snowflake, TextBasedChannel, TextChannel, VoiceBasedChannel, VoiceChannel, EmbedBuilder } from 'discord.js';
+import { entersState, getVoiceConnection, joinVoiceChannel, VoiceConnection, VoiceConnectionStatus, VoiceReceiver } from '@discordjs/voice';
+import { Client, CommandInteraction, GuildMember, Snowflake, TextBasedChannel, TextChannel, VoiceBasedChannel, VoiceChannel, EmbedBuilder, GuildTextBasedChannel } from 'discord.js';
 import { handleAudioStream } from '../bot';
 import { createListeningStream } from './createListeningStream';
 import Config from '../config.json'
 
 import { queryItems as queryItemsTarkovMarket, embedForItems as embedForItemsTarkovMarket, getTtsString as getTtsStringTarkovMarket } from '../flea/tarkov-market';
 import { queryItem as queryItemsTarkovDev, embedForItems as embedForItemsTarkovDev, getTtsString as getTtsStringTarkovDev } from '../flea/tarkov-dev';
+import { doesStreamTriggerActivation } from '../voice-detection/vosk';
+import { PassThrough, Stream } from 'stream';
 
 const recording = new Set<Snowflake>();
 
@@ -16,7 +18,7 @@ const recording = new Set<Snowflake>();
  * @param voiceChannel 
  * @param textChannel 
  */
-export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflake, voiceChannel?: VoiceBasedChannel, textChannel?: TextChannel) {
+export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflake, voiceChannel?: VoiceBasedChannel, _textChannel?: TextChannel) {
     if (!voiceChannel) {
         throw Error("need a voice channel to join and listen");
     }
@@ -36,11 +38,12 @@ export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflak
         await entersState(connection, VoiceConnectionStatus.Ready, 20e3);
         const receiver = connection.receiver;
 
-        receiver.speaking.on('start', (userId) => {
+        receiver.speaking.on('start', async (userId) => {
             if (!recording.has(userId)) {
                 recording.add(userId);
-                const audioStream = createListeningStream(receiver, userId);
-                handleAudioStream(audioStream, connection ?? null, textChannel ?? null);
+                
+                console.log("listening from joinAndListen")
+                handleAudioStreamDetection(receiver, userId, connection, _textChannel ?? undefined);
             }
         });
 
@@ -50,6 +53,25 @@ export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflak
         })
     } catch (error) {
         console.warn(error);
+    }
+}
+
+async function handleAudioStreamDetection(receiver: VoiceReceiver, userId: Snowflake, connection?: VoiceConnection, textChannel?: TextBasedChannel | GuildTextBasedChannel) {
+    const detectionStream = createListeningStream(receiver, userId);
+    const audioStream = new PassThrough(); // Stream chunk less than 1 KB
+    detectionStream.pipe(audioStream)
+    // const audioStream = createListeningStream(receiver, userId);
+    if (await doesStreamTriggerActivation(detectionStream)) {
+        console.log("triggered activation!!!")
+        // copy detection stream into a new stream
+
+        await handleAudioStream(audioStream, connection ?? null, textChannel ?? null);
+    }
+    if (!audioStream.destroyed) {
+        audioStream.destroy();
+    }
+    if (!detectionStream.destroyed) {
+        detectionStream.destroy();
     }
 }
 
@@ -83,8 +105,9 @@ async function join(
         receiver.speaking.on('start', (userId) => {
             if (recordable.has(userId) && !recording.has(userId)) {
                 recording.add(userId);
-                const audioStream = createListeningStream(receiver, userId);
-                handleAudioStream(audioStream, connection ?? null, interaction.channel);
+
+                console.log("user is speaking, starting immediately from join")
+                handleAudioStreamDetection(receiver, userId, connection, interaction.channel || undefined);
             }
         });
 
@@ -116,8 +139,8 @@ async function startListening(
          */
         const receiver = connection.receiver;
         if (connection.receiver.speaking.users.has(userId)) {
-            const audioStream = createListeningStream(receiver, userId);
-            handleAudioStream(audioStream, connection, interaction.channel);
+            console.log("user is already speaking, starting immediately from startListening")
+            handleAudioStreamDetection(receiver, userId, connection ?? null, interaction?.channel ?? undefined);
         }
 
         await interaction.reply({ ephemeral: true, content: 'Listening!' });

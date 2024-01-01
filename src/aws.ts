@@ -106,7 +106,7 @@ export async function synthesizeSpeech(text: string): Promise<Stream.Readable | 
 }
 
 export async function transcribeStream(filename: string | undefined, stream: Stream.Readable): Promise<string | undefined> {
-    const audioPayloadStream = new PassThrough({ highWaterMark: 1 * 1024 }); // Stream chunk less than 1 KB
+    const audioPayloadStream = new PassThrough(); // Stream chunk less than 1 KB
 
     if (filename) {
         const audioSource = fs.createReadStream(filename);
@@ -142,7 +142,7 @@ export async function transcribeStream(filename: string | undefined, stream: Str
         for await (const event of response.TranscriptResultStream) {
             if (event.TranscriptEvent?.Transcript?.Results) {
                 const results = event.TranscriptEvent.Transcript.Results;
-                results.forEach(item => console.log("got item", item.Alternatives, "partial: ", item.IsPartial));
+                // results.forEach(item => console.log("got item", item.Alternatives, "partial: ", item.IsPartial));
                 // right now we filter out partials
                 // the downside is that it takes a while for the text processing to give the final result
                 const parsedResults = results
@@ -153,10 +153,10 @@ export async function transcribeStream(filename: string | undefined, stream: Str
                     // console.log("returning transcript, stream:", stream);
                     return parsedResults[0].Transcript;
                 }
-
-
             }
         }
+    } else {
+        console.log("no transcript result stream", response);
     }
     return undefined;
 }

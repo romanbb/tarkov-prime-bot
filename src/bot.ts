@@ -127,7 +127,7 @@ export async function handleAudioStream(
     voiceConnection: VoiceConnection | null,
     textChannelOutput: TextBasedChannel | GuildTextBasedChannel | null) {
 
-    transcribeStream(undefined, audioStream)
+    await transcribeStream(undefined, audioStream)
         .then(processTranscript)
         .then(query => handleQueryItemsInternal(query, voiceConnection, textChannelOutput))
         .catch(error => {
