@@ -1,13 +1,14 @@
 import { entersState, getVoiceConnection, joinVoiceChannel, VoiceConnection, VoiceConnectionStatus, VoiceReceiver } from '@discordjs/voice';
 import { Client, CommandInteraction, GuildMember, Snowflake, TextBasedChannel, TextChannel, VoiceBasedChannel, VoiceChannel, EmbedBuilder, GuildTextBasedChannel } from 'discord.js';
 import { handleAudioStream } from '../bot';
-import { createListeningStream } from './createListeningStream';
+import { subscribeOpusStream } from './createListeningStream';
 import Config from '../config.json'
 
+import * as prism from 'prism-media';
 import { queryItems as queryItemsTarkovMarket, embedForItems as embedForItemsTarkovMarket, getTtsString as getTtsStringTarkovMarket } from '../flea/tarkov-market';
 import { queryItem as queryItemsTarkovDev, embedForItems as embedForItemsTarkovDev, getTtsString as getTtsStringTarkovDev } from '../flea/tarkov-dev';
 import { doesStreamTriggerActivation } from '../voice-detection/vosk';
-import { PassThrough, Stream } from 'stream';
+import { PassThrough, pipeline, Stream } from 'stream';
 
 const recording = new Set<Snowflake>();
 
@@ -42,14 +43,15 @@ export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflak
             if (!recording.has(userId)) {
                 recording.add(userId);
                 
-                console.log("listening from joinAndListen")
+                // console.log(`+${userId} 💬 listening from joinAndListen`)
                 handleAudioStreamDetection(receiver, userId, connection, _textChannel ?? undefined);
             }
         });
 
         receiver.speaking.on('end', (userId) => {
             recording.delete(userId);
-
+            connection?.receiver.subscriptions.delete(userId);
+            // console.log(`-${userId} 💬 done from joinAndListen`)
         })
     } catch (error) {
         console.warn(error);
@@ -57,21 +59,50 @@ export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflak
 }
 
 async function handleAudioStreamDetection(receiver: VoiceReceiver, userId: Snowflake, connection?: VoiceConnection, textChannel?: TextBasedChannel | GuildTextBasedChannel) {
-    const detectionStream = createListeningStream(receiver, userId);
+    const opusStream = subscribeOpusStream(receiver, userId);
+
+	const oggStream = new prism.opus.OggLogicalBitstream({
+		opusHead: new prism.opus.OpusHead({
+			channelCount: 2,
+			sampleRate: 48000,
+		}),
+		// pageSizeControl: {
+		// 	maxPackets: 10,
+		// },
+	});
+
+    // opusStream.on("end", () => {
+    //     receiver.subscriptions.get(userId)?.destroy();
+    // });
+
+	pipeline(opusStream, oggStream, (err) => {
+		if (err) {
+			console.warn(`❌ Error recording stream err: ${err.message}`);
+		}
+		//  else {
+		// 	console.log(`✅ Recording stream`);
+		// }
+	});
     const audioStream = new PassThrough(); // Stream chunk less than 1 KB
-    detectionStream.pipe(audioStream)
-    // const audioStream = createListeningStream(receiver, userId);
-    if (await doesStreamTriggerActivation(detectionStream)) {
+    oggStream.pipe(audioStream)
+    
+    if (await doesStreamTriggerActivation(oggStream)) {
         console.log("triggered activation!!!")
         // copy detection stream into a new stream
 
         await handleAudioStream(audioStream, connection ?? null, textChannel ?? null);
     }
+    opusStream.unpipe();
+    oggStream.unpipe();
+    audioStream.unpipe();
+    if (!oggStream.destroyed) {
+        oggStream.destroy();
+    }
     if (!audioStream.destroyed) {
         audioStream.destroy();
     }
-    if (!detectionStream.destroyed) {
-        detectionStream.destroy();
+    if (!opusStream.destroyed) {
+        opusStream.destroy();
     }
 }
 

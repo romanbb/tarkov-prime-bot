@@ -43,33 +43,16 @@ export function saveVoice(receiver: VoiceReceiver, userId: string, user?: User) 
 	});
 }
 
-export function createListeningStream(receiver: VoiceReceiver, userId: string): Stream.Readable {
+export function subscribeOpusStream(receiver: VoiceReceiver, userId: string): AudioReceiveStream {
+    // const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    // console.log("instance nonce:", nonce, " creating stream");
 	const opusStream: AudioReceiveStream = receiver.subscribe(userId, {
 		emitClose: true,
 		autoDestroy: true,
 		end: {
-			behavior: EndBehaviorType.AfterInactivity,
-			duration: 500,
+			behavior: EndBehaviorType.AfterSilence,
+			duration: 1000,
 		},
 	});
-    // opusStream.setMaxListeners(0);
-	
-	const oggStream = new prism.opus.OggLogicalBitstream({
-		opusHead: new prism.opus.OpusHead({
-			channelCount: 2,
-			sampleRate: 48000,
-		}),
-		// pageSizeControl: {
-		// 	maxPackets: 10,
-		// },
-	});
-
-	return pipeline(opusStream, oggStream, (err) => {
-		if (err) {
-			console.warn(`❌ Error recording stream ${err.message}`);
-		}
-		//  else {
-		// 	console.log(`✅ Recording stream`);
-		// }
-	});
+    return opusStream;
 }

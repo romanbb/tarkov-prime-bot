@@ -5,6 +5,7 @@ import ffmpeg from "fluent-ffmpeg";
 import type Stream from "stream";
 import Config from "../config.json";
 const MODEL_PATH = "vosk-model-en-us-0.42-gigaspeech" //"vosk-model-en-us-0.22";
+const MODEL_PATH_SMALL = "vosk-model-small-en-us-0.15" //"vosk-model-en-us-0.22";
 const model = new vosk.Model(MODEL_PATH);
 const sampleRate = 16000;
 vosk.setLogLevel(0);
@@ -61,6 +62,11 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
     });
 }
 
+/**
+ * Checks if the given results contain trigger keywords.
+ * @param results The recognition results to check.
+ * @returns A promise that resolves to a boolean indicating whether the results contain trigger keywords.
+ */
 async function doesContainTriggerKeywords(results: vosk.RecognitionResults | (vosk.SpeakerResults & vosk.RecognitionResults)): Promise<boolean> {
     // console.log("doesContainTriggerKeywords", results);
     try {
