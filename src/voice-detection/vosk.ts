@@ -4,17 +4,21 @@ import { Readable } from "stream";
 import ffmpeg from "fluent-ffmpeg";
 import type Stream from "stream";
 import Config from "../config.json";
-const MODEL_PATH = "vosk-model-en-us-0.22"
-const MODEL_PATH_BIG = "vosk-model-en-us-0.42-gigaspeech" //"vosk-model-en-us-0.22";
-const MODEL_PATH_SMALL = "vosk-model-small-en-us-0.15" //"vosk-model-en-us-0.22";
+const MODEL_PATH = "vosk-model-en-us-0.22";
+const MODEL_PATH_BIG = "vosk-model-en-us-0.42-gigaspeech"; //"vosk-model-en-us-0.22";
+const MODEL_PATH_SMALL = "vosk-model-small-en-us-0.15"; //"vosk-model-en-us-0.22";
 const model = new vosk.Model(MODEL_PATH);
 const sampleRate = 48000;
 vosk.setLogLevel(0);
 
-
-export async function doesStreamTriggerActivation(audioStream: Stream.Readable): Promise<boolean> {
+export async function doesStreamTriggerActivation(
+    audioStream: Stream.Readable,
+): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        const rec = new vosk.Recognizer({ model: model, sampleRate: sampleRate });
+        const rec = new vosk.Recognizer({
+            model: model,
+            sampleRate: sampleRate,
+        });
         rec.setPartialWords(true);
         rec.setWords(true);
         rec.setMaxAlternatives(3);
@@ -55,8 +59,10 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
             .audioFrequency(sampleRate)
             .audioCodec("pcm_s16le")
             .format("wav")
-            .on("error", (err) => {
-                console.log("An error occurred: " + err.message + ", err" + err);
+            .on("error", err => {
+                console.log(
+                    "An error occurred: " + err.message + ", err" + err,
+                );
                 rec.free();
                 reject(err);
             })
@@ -64,18 +70,20 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
             //     console.log('Stderr output: ' + stderrLine);
             // })
             .on("end", async () => {
-
                 const finalResult = rec.finalResult();
-                console.log("✅ ffmpeg end event: finished reading data: finalResult", finalResult)
-                let containsKeywords = await doesContainTriggerKeywords(finalResult);
+                console.log(
+                    "✅ ffmpeg end event: finished reading data: finalResult",
+                    finalResult,
+                );
+                let containsKeywords =
+                    await doesContainTriggerKeywords(finalResult);
 
                 rec.free();
                 // console.log("finished checking for trigger words", containsKeywords, 'finalResult', finalResult);
                 resolve(containsKeywords);
             })
 
-            .pipe(wfReader, { end: true })
-
+            .pipe(wfReader, { end: true });
     });
 }
 
@@ -84,20 +92,29 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
  * @param results The recognition results to check.
  * @returns A promise that resolves to a boolean indicating whether the results contain trigger keywords.
  */
-async function doesContainTriggerKeywords(results: vosk.RecognitionResults | vosk.PartialResults): Promise<boolean> {
+async function doesContainTriggerKeywords(
+    results: vosk.RecognitionResults | vosk.PartialResults,
+): Promise<boolean> {
     // console.log("doesContainTriggerKeywords", results);
     try {
         return new Promise((resolve, _reject) => {
-            const triggerRegex = Config.key_phrases.flatMap(phrase => `${phrase}`).join("|");
+            const triggerRegex = Config.key_phrases
+                .flatMap(phrase => `${phrase}`)
+                .join("|");
             // const triggerWords = ["check", "price"];
-            if ('text' in results) {
+            if ("text" in results) {
                 const transcript = results.text ?? "";
 
                 // simplistic check which checks for presence of all trigger words
-                // looks like: 
+                // looks like:
                 // { alternatives: [ { confidence: 63.051117, result: [Array], text: 'check price' } ] }
-                const containsTrigger = transcript.toLowerCase().match(triggerRegex) !== null;
-                console.log("finished checking for trigger words", containsTrigger, results);
+                const containsTrigger =
+                    transcript.toLowerCase().match(triggerRegex) !== null;
+                console.log(
+                    "finished checking for trigger words",
+                    containsTrigger,
+                    results,
+                );
 
                 if (containsTrigger) {
                     resolve(true);
@@ -105,40 +122,51 @@ async function doesContainTriggerKeywords(results: vosk.RecognitionResults | vos
             }
 
             // comes in with regular check
-            if ('alternatives' in results) {
+            if ("alternatives" in results) {
                 console.log("results has alternatives");
 
-                ('alternatives' in results as unknown as []).forEach((alternative) => {
-                    const text = 'text' in alternative as unknown as string;
-                    const words = text.split(" ");
-                    const triggerWords = words.filter((word: string) => {
-                        return word.match(triggerRegex) !== null;
-                    });
+                (("alternatives" in results) as unknown as []).forEach(
+                    alternative => {
+                        const text = ("text" in
+                            alternative) as unknown as string;
+                        const words = text.split(" ");
+                        const triggerWords = words.filter((word: string) => {
+                            return word.match(triggerRegex) !== null;
+                        });
 
-                    if (triggerWords.length > 0) {
-                        console.log("trigger words found in alternative", triggerWords);
-                        resolve(true);
-                    }
-                });
+                        if (triggerWords.length > 0) {
+                            console.log(
+                                "trigger words found in alternative",
+                                triggerWords,
+                            );
+                            resolve(true);
+                        }
+                    },
+                );
             }
 
             // comes in with partial check
-            if ('partial' in results) {
+            if ("partial" in results) {
                 // console.log("results has partial", results);
 
                 // ('partial' in results as unknown as []).forEach((alternative) => {
-                const text = (results as unknown as vosk.PartialResults).partial.trim();
+                const text = (
+                    results as unknown as vosk.PartialResults
+                ).partial.trim();
                 if (text.length > 0) {
-                console.log("partial text was:", text)
+                    console.log("partial text was:", text);
+                }
                 if (text.length > 0) {
-
                     const words = text.split(" ");
                     const triggerWords = words.filter((word: string) => {
                         return word.trim().match(triggerRegex) !== null;
                     });
 
                     if (triggerWords.length > 0) {
-                        console.log("trigger words found in partial", triggerWords);
+                        console.log(
+                            "trigger words found in partial",
+                            triggerWords,
+                        );
                         resolve(true);
                     }
                 }
@@ -148,9 +176,7 @@ async function doesContainTriggerKeywords(results: vosk.RecognitionResults | vos
             resolve(false);
         });
     } catch (error) {
-        console.log("errored checking for trigger words", error)
+        console.log("errored checking for trigger words", error);
         return Promise.reject(error);
     }
 }
-
-
