@@ -125,10 +125,9 @@ async function doesContainTriggerKeywords(
             if ("alternatives" in results) {
                 console.log("results has alternatives");
 
-                (("alternatives" in results) as unknown as []).forEach(
-                    alternative => {
-                        const text = ("text" in
-                            alternative) as unknown as string;
+                (results.alternatives as vosk.PartialResults[]).forEach(
+                    (alternative: Record<string, any>) => {
+                        const text = alternative.text.trim();
                         const words = text.split(" ");
                         const triggerWords = words.filter((word: string) => {
                             return word.match(triggerRegex) !== null;
