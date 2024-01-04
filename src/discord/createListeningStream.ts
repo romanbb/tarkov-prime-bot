@@ -22,10 +22,10 @@ export function saveVoice(receiver: VoiceReceiver, userId: string, user?: User) 
 			channelCount: 2,
 			sampleRate: 48000,
 		}),
-        // highWaterMark: 1 * 1024,
-		pageSizeControl: {
-			maxPackets: 10,
-		},
+        highWaterMark: 1 * 1024,
+		// pageSizeControl: {
+		// 	maxPackets: 10,
+		// },
 	});
 
 	const filename = `./recordings/${Date.now()}-${getDisplayName(userId, user)}.ogg`;
@@ -46,13 +46,15 @@ export function saveVoice(receiver: VoiceReceiver, userId: string, user?: User) 
 export function subscribeOpusStream(receiver: VoiceReceiver, userId: string): AudioReceiveStream {
     // const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     // console.log("instance nonce:", nonce, " creating stream");
+    
 	const opusStream: AudioReceiveStream = receiver.subscribe(userId, {
-		emitClose: true,
-		autoDestroy: true,
+        highWaterMark: 1024,
+        // objectMode: true,
 		end: {
 			behavior: EndBehaviorType.AfterSilence,
-			duration: 1000,
+			duration: 200,
 		},
 	});
+    // console.log("subscriptions: ", receiver.subscriptions.values());
     return opusStream;
 }

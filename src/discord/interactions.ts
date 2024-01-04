@@ -33,7 +33,7 @@ export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflak
             adapterCreator: voiceChannel.guild.voiceAdapterCreator,
         });
     }
-    recordable.add(userId);
+    // recordable.add(userId);
 
     try {
         await entersState(connection, VoiceConnectionStatus.Ready, 20e3);
@@ -42,68 +42,90 @@ export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflak
         receiver.speaking.on('start', async (userId) => {
             if (!recording.has(userId)) {
                 recording.add(userId);
-                
-                // console.log(`+${userId} 💬 listening from joinAndListen`)
-                handleAudioStreamDetection(receiver, userId, connection, _textChannel ?? undefined);
+
+                console.log(`+${userId} 💬 listening from joinAndListen`)
+                handleAudioStreamDetection(connection, receiver, userId, connection, _textChannel ?? undefined);
             }
         });
 
         receiver.speaking.on('end', (userId) => {
             recording.delete(userId);
+            // connection?.receiver.subscriptions.get(userId)?.destroy();
             connection?.receiver.subscriptions.delete(userId);
-            // console.log(`-${userId} 💬 done from joinAndListen`)
+            console.log(`-${userId} 💬 done from joinAndListen`)
         })
     } catch (error) {
-        console.warn(error);
+        console.error(error);
     }
 }
 
-async function handleAudioStreamDetection(receiver: VoiceReceiver, userId: Snowflake, connection?: VoiceConnection, textChannel?: TextBasedChannel | GuildTextBasedChannel) {
+async function handleAudioStreamDetection(
+    voiceConnection: VoiceConnection | undefined,
+    receiver: VoiceReceiver,
+    userId: Snowflake,
+    connection?: VoiceConnection,
+    textChannel?: TextBasedChannel | GuildTextBasedChannel) {
     const opusStream = subscribeOpusStream(receiver, userId);
 
-	const oggStream = new prism.opus.OggLogicalBitstream({
-		opusHead: new prism.opus.OpusHead({
-			channelCount: 2,
-			sampleRate: 48000,
-		}),
-		// pageSizeControl: {
-		// 	maxPackets: 10,
-		// },
-	});
+    const oggStream = new prism.opus.OggLogicalBitstream({
+        opusHead: new prism.opus.OpusHead({
+            channelCount: 2,
+            sampleRate: 48000,
+        }),
+        // pageSizeControl: {
+        // 	maxPackets: 10,
+        // },
+    });
 
     // opusStream.on("end", () => {
     //     receiver.subscriptions.get(userId)?.destroy();
     // });
 
-	pipeline(opusStream, oggStream, (err) => {
-		if (err) {
-			console.warn(`❌ Error recording stream err: ${err.message}`);
-		}
-		//  else {
-		// 	console.log(`✅ Recording stream`);
-		// }
-	});
-    const audioStream = new PassThrough(); // Stream chunk less than 1 KB
-    oggStream.pipe(audioStream)
-    
+    pipeline(opusStream, oggStream, (err) => {
+        if (err) {
+            console.warn(`❌ Error recording stream err: ${err.message}`);
+        }
+        //  else {
+        // 	console.log(`✅ Recording stream`);
+        // }
+    });
+    // const audioStream = new PassThrough({ highWaterMark: 1024 }); // Stream chunk less than 1 KB
+    // oggStream.pipe(audioStream)
+
+    console.log("checking for activation for user", userId)
     if (await doesStreamTriggerActivation(oggStream)) {
         console.log("triggered activation!!!")
         // copy detection stream into a new stream
 
-        await handleAudioStream(audioStream, connection ?? null, textChannel ?? null);
+        await handleAudioStream(oggStream, connection ?? null, textChannel ?? null);
     }
-    opusStream.unpipe();
-    oggStream.unpipe();
-    audioStream.unpipe();
-    if (!oggStream.destroyed) {
-        oggStream.destroy();
+
+    return () => {
+        opusStream.unpipe();
+        oggStream.unpipe();
+        // audioStream.unpipe();
+        if (!oggStream.destroyed) {
+            oggStream.destroy();
+        }
+        // if (!audioStream.destroyed) {
+        //     audioStream.destroy();
+        // }
+        if (!opusStream.destroyed) {
+            opusStream.destroy();
+        }
     }
-    if (!audioStream.destroyed) {
-        audioStream.destroy();
-    }
-    if (!opusStream.destroyed) {
-        opusStream.destroy();
-    }
+    // opusStream.unpipe();
+    // oggStream.unpipe();
+    // audioStream.unpipe();
+    // if (!oggStream.destroyed) {
+    //     oggStream.destroy();
+    // }
+    // if (!audioStream.destroyed) {
+    //     audioStream.destroy();
+    // }
+    // if (!opusStream.destroyed) {
+    //     opusStream.destroy();
+    // }
 }
 
 async function join(
@@ -138,13 +160,13 @@ async function join(
                 recording.add(userId);
 
                 console.log("user is speaking, starting immediately from join")
-                handleAudioStreamDetection(receiver, userId, connection, interaction.channel || undefined);
+                handleAudioStreamDetection(connection, receiver, userId, connection, interaction.channel || undefined);
             }
         });
 
         receiver.speaking.on('end', (userId) => {
             recording.delete(userId);
-
+            connection?.receiver.subscriptions.delete(userId);
         })
     } catch (error) {
         console.warn(error);
@@ -171,7 +193,7 @@ async function startListening(
         const receiver = connection.receiver;
         if (connection.receiver.speaking.users.has(userId)) {
             console.log("user is already speaking, starting immediately from startListening")
-            handleAudioStreamDetection(receiver, userId, connection ?? null, interaction?.channel ?? undefined);
+            handleAudioStreamDetection(connection, receiver, userId, connection ?? null, interaction?.channel ?? undefined);
         }
 
         await interaction.reply({ ephemeral: true, content: 'Listening!' });
