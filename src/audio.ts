@@ -1,5 +1,5 @@
 import { createAudioPlayer, createAudioResource, VoiceConnection } from "@discordjs/voice";
-import { synthesizeSpeech } from "./aws";
+import { synthesizeSpeech } from "./voice/aws";
 import { Readable } from "stream";
 
 const player = createAudioPlayer();
@@ -10,6 +10,6 @@ export async function textToSpeach(text: string, voiceConnection: VoiceConnectio
     if (!!stream && stream instanceof Readable) {
         player.play(createAudioResource(stream));
     } else {
-        throw Error("Not implemented for this type of stream: " + typeof stream)
+        throw Error("Not implemented for this type of stream: " + typeof stream);
     }
 }

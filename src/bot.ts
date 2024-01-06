@@ -9,7 +9,7 @@ import Discord, {
 } from "discord.js";
 import type Stream from "stream";
 import { textToSpeach } from "./audio";
-import { transcribeStream } from "./aws";
+import { transcribeStream } from "./voice/aws";
 import Environment from "./config.env";
 import Config from "./config.json";
 import { deploy } from "./discord/deploy";
@@ -26,6 +26,8 @@ import {
     embedForItems as embedForItemsTarkovDev,
     getTtsString as getTtsStringTarkovDev,
 } from "./flea/tarkov-dev";
+import { ITranscriptionCallback } from "./voice-detection/transcription-models";
+import { transcribeStreamAzure } from "./voice/azure";
 
 const client = new Discord.Client({
     intents: [
@@ -46,19 +48,15 @@ client.on(Events.ClientReady, () => {
             Environment.discord.auto_deploy_guild_id &&
             Environment.discord.dev_user_to_auto_listen
         ) {
-            console.log(
-                "Deploying to ",
-                Environment.discord.auto_deploy_guild_id,
-            );
+            console.log("Deploying to ", Environment.discord.auto_deploy_guild_id);
             client.guilds
                 .fetch(Environment.discord.auto_deploy_guild_id)
                 .then(deploy)
                 .then(async () => {
                     const voiceChannel = client.guilds.cache
                         .get(Environment.discord.auto_deploy_guild_id!)
-                        ?.members.cache.get(
-                            Environment.discord.dev_user_to_auto_listen!,
-                        )?.voice.channel;
+                        ?.members.cache.get(Environment.discord.dev_user_to_auto_listen!)?.voice
+                        .channel;
                     const textChannel = (await client.channels.fetch(
                         Environment.discord.dev_force_input_channel!,
                     )) as TextChannel;
@@ -116,12 +114,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
     try {
         if (handler) {
-            await handler(
-                interaction,
-                recordable,
-                client,
-                getVoiceConnection(interaction.guildId),
-            );
+            await handler(interaction, recordable, client, getVoiceConnection(interaction.guildId));
         } else {
             await interaction.reply("Unknown command");
         }
@@ -136,15 +129,11 @@ client.on(Events.Error, console.warn);
  * @param string transcript to look for phrases to pull keywords out of
  * @returns the keyword to lookup if one was found
  */
-async function processTranscript(
-    string: string | undefined,
-): Promise<string | undefined> {
+async function processTranscript(string: string | undefined): Promise<string | undefined> {
+    console.log("💬 Processing transcript: ", string);
     var result = undefined;
     if (string) {
-        console.log("💬 Processing transcript: ", string);
-        const regexCollection = Config.key_phrases.flatMap(
-            phrase => `${phrase}`,
-        );
+        const regexCollection = Config.key_phrases.flatMap(phrase => `${phrase}`);
 
         regexCollection.forEach(regex => {
             const match = string.toLowerCase().match(regex);
@@ -168,12 +157,18 @@ export async function handleAudioStream(
     audioStream: Stream.Readable,
     voiceConnection: VoiceConnection | null,
     textChannelOutput: TextBasedChannel | GuildTextBasedChannel | null,
+    transcriptionCallback?: ITranscriptionCallback,
 ) {
-    await transcribeStream(undefined, audioStream)
+    transcribeStreamAzure(undefined, audioStream)
+        .then(transcript => {
+            if (transcriptionCallback) {
+                console.log("calling transcription callback");
+                transcriptionCallback.onTranscriptionCompleted(transcript);
+            }
+            return transcript;
+        })
         .then(processTranscript)
-        .then(query =>
-            handleQueryItemsInternal(query, voiceConnection, textChannelOutput),
-        )
+        .then(query => handleQueryItemsInternal(query, voiceConnection, textChannelOutput))
         .catch(error => {
             console.error("❌ Error in transcribe process", error);
         });
@@ -190,11 +185,7 @@ async function handleQueryItemsInternal(
         );
     } else if (Config.flea_source === "tarkov_market") {
         return queryItemsTarkovMarket(query).then(items =>
-            onItemsFoundForTarkovMarket(
-                textChannelOutput,
-                items,
-                voiceConnection,
-            ),
+            onItemsFoundForTarkovMarket(textChannelOutput, items, voiceConnection),
         );
     } else {
         throw new Error(
@@ -251,11 +242,15 @@ const cleanup = (options: { exit?: boolean }) => {
     // });
     if (options.exit) {
         console.log("💀 Exiting by request from system");
+
         process.exit();
     }
 };
 
 // cleanup bot on exit, disconnect from channel, etc
-process.addListener("exit", () => cleanup({ exit: true }));
-process.addListener("SIGINT", () => cleanup({ exit: true }));
-process.addListener("SIGABRT", () => cleanup({ exit: true }));
+process.on("exit", () => cleanup({ exit: true }));
+process.on("SIGINT", err => {
+    console.log("error", err);
+    cleanup({ exit: true });
+});
+process.on("SIGABRT", () => cleanup({ exit: true }));

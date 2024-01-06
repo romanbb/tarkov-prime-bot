@@ -1,25 +1,58 @@
-import { entersState, getVoiceConnection, joinVoiceChannel, VoiceConnection, VoiceConnectionStatus, VoiceReceiver } from '@discordjs/voice';
-import { Client, CommandInteraction, GuildMember, Snowflake, TextBasedChannel, TextChannel, VoiceBasedChannel, VoiceChannel, EmbedBuilder, GuildTextBasedChannel } from 'discord.js';
-import { handleAudioStream } from '../bot';
-import { subscribeOpusStream } from './createListeningStream';
-import Config from '../config.json'
+import {
+    entersState,
+    getVoiceConnection,
+    joinVoiceChannel,
+    VoiceConnection,
+    VoiceConnectionStatus,
+    VoiceReceiver,
+} from "@discordjs/voice";
+import {
+    Client,
+    CommandInteraction,
+    GuildMember,
+    Snowflake,
+    TextBasedChannel,
+    TextChannel,
+    VoiceBasedChannel,
+    VoiceChannel,
+    EmbedBuilder,
+    GuildTextBasedChannel,
+} from "discord.js";
+import { handleAudioStream } from "../bot";
+import { subscribeOpusStream } from "./createListeningStream";
+import Config from "../config.json";
 
-import * as prism from 'prism-media';
-import { queryItems as queryItemsTarkovMarket, embedForItems as embedForItemsTarkovMarket, getTtsString as getTtsStringTarkovMarket } from '../flea/tarkov-market';
-import { queryItem as queryItemsTarkovDev, embedForItems as embedForItemsTarkovDev, getTtsString as getTtsStringTarkovDev } from '../flea/tarkov-dev';
-import { doesStreamTriggerActivation } from '../voice-detection/vosk';
-import { PassThrough, pipeline, Stream } from 'stream';
+import * as prism from "prism-media";
+import {
+    queryItems as queryItemsTarkovMarket,
+    embedForItems as embedForItemsTarkovMarket,
+    getTtsString as getTtsStringTarkovMarket,
+} from "../flea/tarkov-market";
+import {
+    queryItem as queryItemsTarkovDev,
+    embedForItems as embedForItemsTarkovDev,
+    getTtsString as getTtsStringTarkovDev,
+} from "../flea/tarkov-dev";
+import { doesStreamTriggerActivation } from "../voice-detection/vosk";
+import { PassThrough, pipeline, Stream } from "stream";
+import { ActiveStream } from "../voice-detection/active-stream";
+import { ITranscriptionCallback } from "../voice-detection/transcription-models";
 
 const recording = new Set<Snowflake>();
 
 /**
  * Debug helper
- * @param recordable 
- * @param userId 
- * @param voiceChannel 
- * @param textChannel 
+ * @param recordable
+ * @param userId
+ * @param voiceChannel
+ * @param textChannel
  */
-export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflake, voiceChannel?: VoiceBasedChannel, _textChannel?: TextChannel) {
+export async function joinAndListen(
+    recordable: Set<Snowflake>,
+    userId: Snowflake,
+    voiceChannel?: VoiceBasedChannel,
+    _textChannel?: TextChannel,
+) {
     if (!voiceChannel) {
         throw Error("need a voice channel to join and listen");
     }
@@ -39,49 +72,75 @@ export async function joinAndListen(recordable: Set<Snowflake>, userId: Snowflak
         await entersState(connection, VoiceConnectionStatus.Ready, 20e3);
         const receiver = connection.receiver;
 
-        receiver.speaking.on('start', async (userId) => {
-            if (!recording.has(userId)) {
-                recording.add(userId);
+        const activeStreams = new Map<Snowflake, Array<ActiveStream>>();
+        receiver.speaking.on("start", userId => {
+            // if (!recording.has(userId)) {
+            // recording.add(userId);
 
-                console.log(`+${userId} 💬 listening from joinAndListen`)
-                handleAudioStreamDetection(connection, receiver, userId, connection, _textChannel ?? undefined);
-            }
+            // console.log(`+${userId} 💬 listening from joinAndListen`);
+            const stream = handleAudioStreamDetection(
+                connection,
+                receiver,
+                userId,
+                connection,
+                _textChannel ?? undefined,
+            );
+            const currentStreams = activeStreams.get(userId) ?? new Array<ActiveStream>();
+            activeStreams.set(userId, currentStreams.concat(stream));
+            // }
         });
 
-        receiver.speaking.on('end', (userId) => {
-            recording.delete(userId);
+        receiver.speaking.on("end", userId => {
+            // recording.delete(userId);
+            const endingStreams = activeStreams.get(userId);
+            activeStreams.delete(userId);
+            // console.log(`done speaking for stream ${endingStreams}`);
+
+            for (const stream of endingStreams ?? []) {
+                if (stream.speechRecognizingResulted) {
+                    stream.stream.destroy();
+                } else {
+                    stream.readyToDelete = true;
+                    setTimeout(() => {
+                        if (!stream.stream.closed) {
+                            console.log(`❌❌❌ stream=${stream} was not closed, destroying..`);
+                            stream.stream.destroy();
+                        }
+                    }, 5000);
+                }
+            }
+            // if (endingStream) {
+            //     endingStream.readyToDelete = true;
+            // }
             // connection?.receiver.subscriptions.get(userId)?.destroy();
-            connection?.receiver.subscriptions.delete(userId);
-            console.log(`-${userId} 💬 done from joinAndListen`)
-        })
+            // connection?.receiver.subscriptions.delete(userId);
+            // console.log(`-${userId} 💬 done from joinAndListen`);
+        });
     } catch (error) {
         console.error(error);
     }
 }
 
-async function handleAudioStreamDetection(
+function handleAudioStreamDetection(
     voiceConnection: VoiceConnection | undefined,
     receiver: VoiceReceiver,
     userId: Snowflake,
     connection?: VoiceConnection,
-    textChannel?: TextBasedChannel | GuildTextBasedChannel) {
+    textChannel?: TextBasedChannel | GuildTextBasedChannel,
+): ActiveStream {
     const opusStream = subscribeOpusStream(receiver, userId);
+
+    const activeStream = new ActiveStream(userId, opusStream);
 
     const oggStream = new prism.opus.OggLogicalBitstream({
         opusHead: new prism.opus.OpusHead({
             channelCount: 2,
             sampleRate: 48000,
         }),
-        // pageSizeControl: {
-        // 	maxPackets: 10,
-        // },
     });
 
-    // opusStream.on("end", () => {
-    //     receiver.subscriptions.get(userId)?.destroy();
-    // });
-
-    pipeline(opusStream, oggStream, (err) => {
+    const oggStreamTranscription = new PassThrough();
+    pipeline(opusStream, oggStream, oggStreamTranscription, err => {
         if (err) {
             console.warn(`❌ Error recording stream err: ${err.message}`);
         }
@@ -89,43 +148,34 @@ async function handleAudioStreamDetection(
         // 	console.log(`✅ Recording stream`);
         // }
     });
-    // const audioStream = new PassThrough({ highWaterMark: 1024 }); // Stream chunk less than 1 KB
-    // oggStream.pipe(audioStream)
+    const transcriptionCallback = <ITranscriptionCallback>{
+        onTranscriptionCompleted: (text: string) => {
+            // console.log("transcription callback", text);
+            activeStream.speechRecognizingResulted = true;
+            if (activeStream.readyToDelete) {
+                oggStream.destroy();
+            } else {
+                activeStream.readyToDelete = true;
+                console.log("activeStream was not ready to delete but transcription was completed");
+            }
+        },
+    };
+    // console.log("checkingfor activation for user", userId);
+    doesStreamTriggerActivation(oggStream).then(result => {
+        if (result) {
+            console.log("triggered activation!!!");
+            // copy detection stream into a new stream
 
-    console.log("checking for activation for user", userId)
-    if (await doesStreamTriggerActivation(oggStream)) {
-        console.log("triggered activation!!!")
-        // copy detection stream into a new stream
-
-        await handleAudioStream(oggStream, connection ?? null, textChannel ?? null);
-    }
-
-    return () => {
-        opusStream.unpipe();
-        oggStream.unpipe();
-        // audioStream.unpipe();
-        if (!oggStream.destroyed) {
-            oggStream.destroy();
+            handleAudioStream(
+                oggStreamTranscription,
+                connection ?? null,
+                textChannel ?? null,
+                transcriptionCallback,
+            );
         }
-        // if (!audioStream.destroyed) {
-        //     audioStream.destroy();
-        // }
-        if (!opusStream.destroyed) {
-            opusStream.destroy();
-        }
-    }
-    // opusStream.unpipe();
-    // oggStream.unpipe();
-    // audioStream.unpipe();
-    // if (!oggStream.destroyed) {
-    //     oggStream.destroy();
-    // }
-    // if (!audioStream.destroyed) {
-    //     audioStream.destroy();
-    // }
-    // if (!opusStream.destroyed) {
-    //     opusStream.destroy();
-    // }
+    });
+
+    return activeStream;
 }
 
 async function join(
@@ -146,7 +196,10 @@ async function join(
                 adapterCreator: channel.guild.voiceAdapterCreator,
             });
         } else {
-            await interaction.followUp({ content: 'Join a voice channel and then try that again!', ephemeral: true });
+            await interaction.followUp({
+                content: "Join a voice channel and then try that again!",
+                ephemeral: true,
+            });
             return;
         }
     }
@@ -155,25 +208,33 @@ async function join(
         await entersState(connection, VoiceConnectionStatus.Ready, 20e3);
         const receiver = connection.receiver;
 
-        receiver.speaking.on('start', (userId) => {
+        receiver.speaking.on("start", userId => {
             if (recordable.has(userId) && !recording.has(userId)) {
                 recording.add(userId);
 
-                console.log("user is speaking, starting immediately from join")
-                handleAudioStreamDetection(connection, receiver, userId, connection, interaction.channel || undefined);
+                console.log("user is speaking, starting immediately from join");
+                handleAudioStreamDetection(
+                    connection,
+                    receiver,
+                    userId,
+                    connection,
+                    interaction.channel || undefined,
+                );
             }
         });
 
-        receiver.speaking.on('end', (userId) => {
+        receiver.speaking.on("end", userId => {
             recording.delete(userId);
             connection?.receiver.subscriptions.delete(userId);
-        })
+        });
     } catch (error) {
         console.warn(error);
-        await interaction.followUp('Failed to join voice channel within 20 seconds, please try again later!');
+        await interaction.followUp(
+            "Failed to join voice channel within 20 seconds, please try again later!",
+        );
     }
 
-    await interaction.editReply({ content: 'Ready' });
+    await interaction.editReply({ content: "Ready" });
 }
 
 async function startListening(
@@ -192,16 +253,24 @@ async function startListening(
          */
         const receiver = connection.receiver;
         if (connection.receiver.speaking.users.has(userId)) {
-            console.log("user is already speaking, starting immediately from startListening")
-            handleAudioStreamDetection(connection, receiver, userId, connection ?? null, interaction?.channel ?? undefined);
+            console.log("user is already speaking, starting immediately from startListening");
+            handleAudioStreamDetection(
+                connection,
+                receiver,
+                userId,
+                connection ?? null,
+                interaction?.channel ?? undefined,
+            );
         }
 
-        await interaction.reply({ ephemeral: true, content: 'Listening!' });
+        await interaction.reply({ ephemeral: true, content: "Listening!" });
     } else {
-        await interaction.reply({ ephemeral: true, content: 'Join a voice channel and then try that again!' });
+        await interaction.reply({
+            ephemeral: true,
+            content: "Join a voice channel and then try that again!",
+        });
     }
 }
-
 
 async function stopListening(
     interaction: CommandInteraction,
@@ -214,20 +283,17 @@ async function stopListening(
 
     // TODO only if last member?
     // connection?.receiver?.voiceConnection?.destroy();
-    await interaction.reply({ ephemeral: true, content: 'No longer listening to you!' });
+    await interaction.reply({ ephemeral: true, content: "No longer listening to you!" });
 }
 
 async function getEmbedForItem(query: string): Promise<EmbedBuilder | null> {
     if (Config.flea_source === "tarkov_dev") {
-        return queryItemsTarkovDev(query)
-            .then(embedForItemsTarkovDev)
+        return queryItemsTarkovDev(query).then(embedForItemsTarkovDev);
     } else if (Config.flea_source === "tarkov_market") {
-        return queryItemsTarkovMarket(query)
-            .then(embedForItemsTarkovMarket)
+        return queryItemsTarkovMarket(query).then(embedForItemsTarkovMarket);
     }
-    return null
+    return null;
 }
-
 
 async function check(
     interaction: CommandInteraction,
@@ -235,18 +301,16 @@ async function check(
     _client: Client,
     _connection?: VoiceConnection,
 ) {
-    const query = interaction.options.get('query')!.value! as Snowflake;
+    const query = interaction.options.get("query")!.value! as Snowflake;
 
-    const embed = getEmbedForItem(query)
-        .then(embed => {
-            if (embed) {
-                interaction.reply({ ephemeral: true, embeds: [embed] });
-            } else {
-                interaction.reply({ ephemeral: true, content: 'No results found.' });
-            }
-        })
+    const embed = getEmbedForItem(query).then(embed => {
+        if (embed) {
+            interaction.reply({ ephemeral: true, embeds: [embed] });
+        } else {
+            interaction.reply({ ephemeral: true, content: "No results found." });
+        }
+    });
 }
-
 
 async function leave(
     interaction: CommandInteraction,
@@ -256,9 +320,9 @@ async function leave(
 ) {
     if (connection) {
         connection.destroy();
-        await interaction.reply({ ephemeral: true, content: 'Left the channel!' });
+        await interaction.reply({ ephemeral: true, content: "Left the channel!" });
     } else {
-        await interaction.reply({ ephemeral: true, content: 'Not playing in this server!' });
+        await interaction.reply({ ephemeral: true, content: "Not playing in this server!" });
     }
 }
 
@@ -271,8 +335,8 @@ export const interactionHandlers = new Map<
         connection?: VoiceConnection,
     ) => Promise<void>
 >();
-interactionHandlers.set('join', join);
-interactionHandlers.set('start', startListening);
-interactionHandlers.set('check', check);
-interactionHandlers.set('stop', stopListening);
-interactionHandlers.set('leave', leave);
+interactionHandlers.set("join", join);
+interactionHandlers.set("start", startListening);
+interactionHandlers.set("check", check);
+interactionHandlers.set("stop", stopListening);
+interactionHandlers.set("leave", leave);

@@ -1,10 +1,14 @@
 import AWS from "aws-sdk";
 import { PassThrough } from "stream";
-import { TranscribeStreamingClient, StartStreamTranscriptionCommand, MediaEncoding } from "@aws-sdk/client-transcribe-streaming";
+import {
+    TranscribeStreamingClient,
+    StartStreamTranscriptionCommand,
+    MediaEncoding,
+} from "@aws-sdk/client-transcribe-streaming";
 import { OutputFormat, PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
-import Environment from './config.env'
-import fs from 'fs';
-import type Stream from 'stream'
+import Environment from "../config.env";
+import fs from "fs";
+import type Stream from "stream";
 
 const sts = new AWS.STS();
 
@@ -30,17 +34,17 @@ const getCredentials = async (): Promise<AWS.STS.GetSessionTokenResponse> => {
     };
 
     try {
-        credentials = await sts.getSessionToken(params).promise()
+        credentials = await sts.getSessionToken(params).promise();
     } catch (err) {
         credentials = undefined;
         transcribeClient = undefined;
         pollyClient = undefined;
-        console.log("error getting session token", err)
+        console.log("error getting session token", err);
         throw err;
     }
 
     return credentials;
-}
+};
 
 const aqcuirePollyClient = async (): Promise<PollyClient> => {
     const { Credentials } = await getCredentials();
@@ -53,15 +57,15 @@ const aqcuirePollyClient = async (): Promise<PollyClient> => {
             credentials: {
                 accessKeyId: Credentials.AccessKeyId,
                 secretAccessKey: Credentials.SecretAccessKey,
-                sessionToken: Credentials.SessionToken
-            }
+                sessionToken: Credentials.SessionToken,
+            },
         });
     } else {
         throw Error("Unable to setup polly client");
     }
 
     return pollyClient;
-}
+};
 
 const aqcuireStreamingClient = async (): Promise<TranscribeStreamingClient> => {
     const { Credentials } = await getCredentials();
@@ -75,28 +79,32 @@ const aqcuireStreamingClient = async (): Promise<TranscribeStreamingClient> => {
             credentials: {
                 accessKeyId: Credentials.AccessKeyId,
                 secretAccessKey: Credentials.SecretAccessKey,
-                sessionToken: Credentials.SessionToken
-            }
+                sessionToken: Credentials.SessionToken,
+            },
         });
     } else {
         throw Error("Unable to setup streaming client");
     }
 
-    return transcribeClient
-}
+    return transcribeClient;
+};
 
-export async function synthesizeSpeech(text: string): Promise<Stream.Readable | ReadableStream | Blob | undefined> {
+export async function synthesizeSpeech(
+    text: string,
+): Promise<Stream.Readable | ReadableStream | Blob | undefined> {
     const client = await aqcuirePollyClient();
     if (!client) {
         throw Error("Unable to aqcuire polly client");
     }
-    const response = await client.send(new SynthesizeSpeechCommand({
-        Text: text,
-        Engine: "standard",
-        LanguageCode: "en-US",
-        OutputFormat: OutputFormat.MP3,
-        VoiceId: "Justin"
-    }));
+    const response = await client.send(
+        new SynthesizeSpeechCommand({
+            Text: text,
+            Engine: "standard",
+            LanguageCode: "en-US",
+            OutputFormat: OutputFormat.MP3,
+            VoiceId: "Justin",
+        }),
+    );
 
     const stream = response.AudioStream;
     if (!stream) {
@@ -105,20 +113,23 @@ export async function synthesizeSpeech(text: string): Promise<Stream.Readable | 
     return stream;
 }
 
-export async function transcribeStream(filename: string | undefined, stream: Stream.Readable): Promise<string | undefined> {
-    const audioPayloadStream = new PassThrough(); // Stream chunk less than 1 KB
+export async function transcribeStream(
+    filename: string | undefined,
+    stream: Stream.Readable,
+): Promise<string | undefined> {
+    // const audioPayloadStream = new PassThrough(); // Stream chunk less than 1 KB
 
     if (filename) {
         const audioSource = fs.createReadStream(filename);
-        audioSource.pipe(audioPayloadStream);
+        // audioSource.pipe(audioPayloadStream);
     } else if (stream) {
-        stream.pipe(audioPayloadStream);
+        // stream.pipe(audioPayloadStream);
     } else {
         throw "file or stream required to transcribe";
     }
 
     const audioStream = async function* () {
-        for await (const payloadChunk of audioPayloadStream) {
+        for await (const payloadChunk of stream) {
             yield { AudioEvent: { AudioChunk: payloadChunk } };
         }
     };
@@ -139,6 +150,7 @@ export async function transcribeStream(filename: string | undefined, stream: Str
 
     const response = await client.send(command);
     if (response.TranscriptResultStream) {
+        // console.log("got transcript result stream: ", response.$metadata);
         for await (const event of response.TranscriptResultStream) {
             if (event.TranscriptEvent?.Transcript?.Results) {
                 const results = event.TranscriptEvent.Transcript.Results;
@@ -150,7 +162,7 @@ export async function transcribeStream(filename: string | undefined, stream: Str
                     .flatMap(result => result.Alternatives);
 
                 if (parsedResults && parsedResults[0]) {
-                    // console.log("returning transcript, stream:", stream);
+                    // console.log(`returning transcript, stream: ${stream}`);
                     return parsedResults[0].Transcript;
                 }
             }

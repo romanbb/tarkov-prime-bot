@@ -1,5 +1,6 @@
 {
     "flea_source": "tarkov_dev",
+    "hotword_regex": "(.*?)(check|price|price check|check price)(.*)",
     "key_phrases": [
         "check[,.]? ([0-9A-Za-z()\\-\\s]+)([.,]?)",
         "price check[,.]? ([0-9A-Za-z()\\-\\s]+)([.,]?)",
