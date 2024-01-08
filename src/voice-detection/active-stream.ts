@@ -18,6 +18,6 @@ export class ActiveStream {
         }
     }
     toString() {
-        return `ActiveStream: ${this.userId}, {readyToDelete: ${this.readyToDelete}, userDoneSpeaking: ${this.speechRecognizingResulted}}`;
+        return `ActiveStream: ${this.userId}, {readyToDelete: ${this.readyToDelete}, speechRecognizingResulted: ${this.speechRecognizingResulted}}`;
     }
 }

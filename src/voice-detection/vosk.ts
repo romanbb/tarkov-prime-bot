@@ -5,7 +5,7 @@ import ffmpeg from "fluent-ffmpeg";
 import type Stream from "stream";
 import Config from "../config.json";
 
-const DEBUG_VOSK = false;
+const DEBUG_VOSK = true;
 const MODEL_PATH = "support/vosk/vosk-model-en-us-0.22";
 const MODEL_PATH_BIG = "support/vosk/vosk-model-en-us-0.42-gigaspeech"; //"vosk-model-en-us-0.22";
 const MODEL_PATH_SMALL = "support/vosk/vosk-model-small-en-us-0.15"; //"vosk-model-en-us-0.22";
@@ -24,7 +24,7 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
         rec.setMaxAlternatives(3);
 
         const wfReader = new wav.Reader();
-        const wfReadable = new Readable({ highWaterMark: 1024 }).wrap(wfReader);
+        const wfReadable = new Readable().wrap(wfReader);
 
         // prevents double rec.free() calls which would cause segfaults
         let finished = false;
@@ -73,6 +73,7 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
             .audioChannels(1)
             .audioFrequency(sampleRate)
             .audioCodec("pcm_s16le")
+            .audioBitrate(16)
             .format("wav")
             .on("error", err => {
                 console.log("An error occurred: " + err.message + ", err" + err);
@@ -82,23 +83,17 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
             //     if (DEBUG_VOSK) console.log('Stderr output: ' + stderrLine);
             // })
             .on("end", async () => {
+                const finalResult = rec.finalResult();
                 if (DEBUG_VOSK)
                     console.log(
                         "✅ ffmpeg end event: finished reading data: finalResult",
                         // finalResult,
                     );
+
+                let containsKeywords = await doesContainTriggerKeywords(finalResult);
+                cleanupAndResolve(containsKeywords);
             })
             .pipe(wfReader, { end: true });
-
-        // prefer end of cmd event instead of end of stream above... not sure if it matters
-        ffmpegCmd.on("end", async () => {
-            // const finalResult = rec.finalResult();
-            if (DEBUG_VOSK) console.log("ffmpegCmd end event");
-            const finalResult = rec.finalResult();
-
-            let containsKeywords = await doesContainTriggerKeywords(finalResult);
-            cleanupAndResolve(containsKeywords);
-        });
     });
 }
 

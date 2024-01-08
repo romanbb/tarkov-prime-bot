@@ -31,7 +31,7 @@ export function saveVoice(receiver: VoiceReceiver, userId: string, user?: User) 
             channelCount: 2,
             sampleRate: 48000,
         }),
-        highWaterMark: 1 * 1024,
+        // highWaterMark: 1 * 1024,
         // pageSizeControl: {
         // 	maxPackets: 10,
         // },
@@ -57,11 +57,11 @@ export function subscribeOpusStream(receiver: VoiceReceiver, userId: string): Au
     // console.log("instance nonce:", nonce, " creating stream");
 
     const opusStream: AudioReceiveStream = receiver.subscribe(userId, {
-        highWaterMark: 1024,
+        // highWaterMark: 1024,
         // objectMode: true,
         end: {
             behavior: EndBehaviorType.AfterSilence,
-            duration: 500,
+            duration: 50,
         },
     });
     // console.log("subscriptions: ", receiver.subscriptions.values());
@@ -80,23 +80,27 @@ export function handleAudioStreamDetection(
     const activeStream = new ActiveStream(userId, opusStream);
 
     const oggStream = new prism.opus.OggLogicalBitstream({
+        // highWaterMark: 1024,
+
         opusHead: new prism.opus.OpusHead({
             channelCount: 2,
-            sampleRate: 48000,
+            sampleRate: 128000,
         }),
     });
 
     const oggStreamTranscription = new PassThrough();
     pipeline(opusStream, oggStream, oggStreamTranscription, err => {
         if (err) {
-            console.warn(`❌ Error recording stream err: ${err.message}`);
+            console.warn(`❌ createListeningStream(): Error recording stream err: ${err.message}`);
         }
         //  else {
         // 	console.log(`✅ Recording stream`);
         // }
     });
+    // oggStream.pipe(oggStreamTranscription);
     const transcriptionCallback = <ITranscriptionCallback>{
         onTranscriptionCompleted: (text: string) => {
+            oggStreamTranscription.destroy();
             console.log(
                 "transcription callback",
                 text,
@@ -129,6 +133,7 @@ export function handleAudioStreamDetection(
                 );
             } else {
                 console.log("determined stream will not trigger activation, closing");
+                oggStreamTranscription.destroy();
                 activeStream.closeStream();
             }
         });

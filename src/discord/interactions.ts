@@ -13,6 +13,8 @@ import {
     TextChannel,
     VoiceBasedChannel,
     EmbedBuilder,
+    TextBasedChannel,
+    GuildTextBasedChannel,
 } from "discord.js";
 import { handleAudioStreamDetection } from "./createListeningStream";
 import Config from "../config.json";
@@ -29,6 +31,7 @@ import { ActiveStream } from "../voice-detection/active-stream";
 
 const recording = new Set<Snowflake>();
 
+const activeStreams = new Map<Snowflake, Array<ActiveStream>>();
 /**
  * Debug helper
  * @param recordable
@@ -61,55 +64,56 @@ export async function joinAndListen(
         await entersState(connection, VoiceConnectionStatus.Ready, 20e3);
         const receiver = connection.receiver;
 
-        const activeStreams = new Map<Snowflake, Array<ActiveStream>>();
-        receiver.speaking.on("start", userId => {
-            // if (!recording.has(userId)) {
-            // recording.add(userId);
-
-            console.log(`+${userId} 💬 listening from joinAndListen`);
-            const stream = handleAudioStreamDetection(
-                connection,
-                receiver,
-                userId,
-                connection,
-                _textChannel ?? undefined,
-            );
-            const currentStreams = activeStreams.get(userId) ?? new Array<ActiveStream>();
-            activeStreams.set(userId, currentStreams.concat(stream));
-            // }
-        });
-
-        receiver.speaking.on("end", userId => {
-            // recording.delete(userId);
-            const endingStreams = activeStreams.get(userId);
-            activeStreams.delete(userId);
-            console.log(`-${userId} 💬 done speaking for stream ${endingStreams}`);
-
-            for (const stream of endingStreams ?? []) {
-                stream.readyToDelete = true;
-                if (stream.speechRecognizingResulted) {
-                    stream.closeStream();
-                    console.log(`❌  stream=${stream} was ready to delete, destroying..`);
-                } else {
-                    setTimeout(() => {
-                        if (!stream.stream.closed) {
-                            console.log(`❌❌❌ stream=${stream} was not closed, destroying..`);
-                        }
-                        stream.closeStream();
-                    }, 4000);
-                }
-            }
-            // if (endingStream) {
-            //     endingStream.readyToDelete = true;
-            // }
-            // connection?.receiver.subscriptions.get(userId)?.destroy();
-            // connection?.receiver.subscriptions.delete(userId);
-            // console.log(`-${userId} 💬 done from joinAndListen`);
-        });
+        receiver.speaking.on("start", setupStartEvent(connection, _textChannel));
+        receiver.speaking.on("end", endEvent);
     } catch (error) {
         console.error(error);
     }
 }
+
+const setupStartEvent = (
+    connection: VoiceConnection,
+    channel: TextBasedChannel | GuildTextBasedChannel,
+) => {
+    return userId => {
+        // if (!recording.has(userId)) {
+        // recording.add(userId);
+
+        console.log(`+${userId} 💬 listening from joinAndListen`);
+        const stream = handleAudioStreamDetection(
+            connection,
+            connection.receiver,
+            userId,
+            connection,
+            channel ?? undefined,
+        );
+        const currentStreams = activeStreams.get(userId) ?? new Array<ActiveStream>();
+        activeStreams.set(userId, currentStreams.concat(stream));
+        // }
+    };
+};
+
+const endEvent = userId => {
+    // recording.delete(userId);
+    const endingStreams = activeStreams.get(userId);
+    activeStreams.delete(userId);
+    console.log(`-${userId} 💬 done speaking for stream ${endingStreams}`);
+
+    for (const stream of endingStreams ?? []) {
+        stream.readyToDelete = true;
+        if (stream.speechRecognizingResulted) {
+            stream.closeStream();
+            console.log(`❌  stream=${stream} was ready to delete, destroying..`);
+        } else {
+            setTimeout(() => {
+                if (!stream.stream.closed) {
+                    console.log(`❌❌❌ stream=${stream} was not closed, destroying..`);
+                }
+                stream.closeStream();
+            }, 4000);
+        }
+    }
+};
 
 async function join(
     interaction: CommandInteraction,
@@ -141,25 +145,9 @@ async function join(
         await entersState(connection, VoiceConnectionStatus.Ready, 20e3);
         const receiver = connection.receiver;
 
-        receiver.speaking.on("start", userId => {
-            if (recordable.has(userId) && !recording.has(userId)) {
-                recording.add(userId);
+        receiver.speaking.on("start", setupStartEvent(connection, interaction.channel));
 
-                console.log("user is speaking, starting immediately from join");
-                handleAudioStreamDetection(
-                    connection,
-                    receiver,
-                    userId,
-                    connection,
-                    interaction.channel || undefined,
-                );
-            }
-        });
-
-        receiver.speaking.on("end", userId => {
-            recording.delete(userId);
-            connection?.receiver.subscriptions.delete(userId);
-        });
+        receiver.speaking.on("end", endEvent);
     } catch (error) {
         console.warn(error);
         await interaction.followUp(
@@ -179,22 +167,22 @@ async function startListening(
     if (connection) {
         // const userId = interaction.options.get('speaker')!.value! as Snowflake;
         const userId = interaction.member?.user.id as Snowflake;
-        recordable.add(userId);
+        // recordable.add(userId);
 
-        /**
-         * if user is already keyed up start immediately
-         */
-        const receiver = connection.receiver;
-        if (connection.receiver.speaking.users.has(userId)) {
-            console.log("user is already speaking, starting immediately from startListening");
-            handleAudioStreamDetection(
-                connection,
-                receiver,
-                userId,
-                connection ?? null,
-                interaction?.channel ?? undefined,
-            );
-        }
+        // /**
+        //  * if user is already keyed up start immediately
+        //  */
+        // const receiver = connection.receiver;
+        // if (connection.receiver.speaking.users.has(userId)) {
+        //     console.log("user is already speaking, starting immediately from startListening");
+        //     handleAudioStreamDetection(
+        //         connection,
+        //         receiver,
+        //         userId,
+        //         connection ?? null,
+        //         interaction?.channel ?? undefined,
+        //     );
+        // }
 
         await interaction.reply({ ephemeral: true, content: "Listening!" });
     } else {
