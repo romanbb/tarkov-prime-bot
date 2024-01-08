@@ -26,12 +26,24 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
         const wfReader = new wav.Reader();
         const wfReadable = new Readable({ highWaterMark: 1024 }).wrap(wfReader);
 
+        let finished = false;
+
         const cleanupAndResolve = (result: boolean) => {
-            rec.free();
-            resolve(result);
+            if (finished) {
+                console.log("!! finished was already true, returning early");
+            } else {
+                finished = true;
+                wfReadable.removeListener("data", dataListener);
+                try {
+                    rec.free();
+                } catch (error) {
+                    console.log("error freeing rec", error);
+                }
+                resolve(result);
+            }
         };
 
-        wfReadable.on("data", async (data: Buffer) => {
+        const dataListener = async (data: Buffer) => {
             // we need to remove the empty bytes:
             // data = data.subarray(0, data.indexOf(0x00));
 
@@ -39,23 +51,27 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
 
             if (end_of_speech) {
                 // if (DEBUG_VOSK) console.log("end of speech for ", rec.result());
-                // if (DEBUG_VOSK) console.log("DONE: ", JSON.stringify(rec.result(), null, 4));
+                if (DEBUG_VOSK) console.log("DONE: ", JSON.stringify(rec.result(), null, 4));
 
                 if (await doesContainTriggerKeywords(rec.result())) {
+                    if (DEBUG_VOSK)
+                        console.log(">>> early return via end_of_speech result, cleaning up");
                     cleanupAndResolve(true);
                     return;
                 }
             } else {
-                // if (DEBUG_VOSK) console.log("wfReadable partial: ", rec.partialResult());//JSON.stringify(rec.partialResult(), null, 4));
+                if (DEBUG_VOSK) console.log("wfReadable partial: ", rec.partialResult()); //JSON.stringify(rec.partialResult(), null, 4));
 
                 if (await doesContainTriggerKeywords(rec.partialResult())) {
+                    if (DEBUG_VOSK) console.log(">>> early return via partial result, cleaning up");
                     cleanupAndResolve(true);
                     return;
                 }
             }
-        });
+        };
+        wfReadable.on("data", dataListener);
 
-        ffmpeg(audioStream)
+        const ffmpegCmd = ffmpeg(audioStream)
             .audioChannels(1)
             .audioFrequency(sampleRate)
             .audioCodec("pcm_s16le")
@@ -68,18 +84,21 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
             //     if (DEBUG_VOSK) console.log('Stderr output: ' + stderrLine);
             // })
             .on("end", async () => {
-                const finalResult = rec.finalResult();
                 if (DEBUG_VOSK)
                     console.log(
                         "✅ ffmpeg end event: finished reading data: finalResult",
-                        finalResult,
+                        // finalResult,
                     );
-                let containsKeywords = await doesContainTriggerKeywords(finalResult);
-
-                cleanupAndResolve(containsKeywords);
             })
-
             .pipe(wfReader, { end: true });
+        ffmpegCmd.on("end", async () => {
+            // const finalResult = rec.finalResult();
+            if (DEBUG_VOSK) console.log("ffmpegCmd end event");
+            const finalResult = rec.finalResult();
+
+            let containsKeywords = await doesContainTriggerKeywords(finalResult);
+            cleanupAndResolve(containsKeywords);
+        });
     });
 }
 
