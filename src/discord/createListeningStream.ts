@@ -52,7 +52,7 @@ export function subscribeOpusStream(receiver: VoiceReceiver, userId: string): Au
         // objectMode: true,
         end: {
             behavior: EndBehaviorType.AfterSilence,
-            duration: 300,
+            duration: 500,
         },
     });
     // console.log("subscriptions: ", receiver.subscriptions.values());

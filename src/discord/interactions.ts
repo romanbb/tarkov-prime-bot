@@ -17,6 +17,7 @@ import {
     VoiceChannel,
     EmbedBuilder,
     GuildTextBasedChannel,
+    ActivityFlags,
 } from "discord.js";
 import { handleAudioStream } from "../bot";
 import { subscribeOpusStream } from "./createListeningStream";
@@ -77,7 +78,7 @@ export async function joinAndListen(
             // if (!recording.has(userId)) {
             // recording.add(userId);
 
-            // console.log(`+${userId} 💬 listening from joinAndListen`);
+            console.log(`+${userId} 💬 listening from joinAndListen`);
             const stream = handleAudioStreamDetection(
                 connection,
                 receiver,
@@ -94,19 +95,20 @@ export async function joinAndListen(
             // recording.delete(userId);
             const endingStreams = activeStreams.get(userId);
             activeStreams.delete(userId);
-            // console.log(`done speaking for stream ${endingStreams}`);
+            console.log(`-${userId} 💬 done speaking for stream ${endingStreams}`);
 
             for (const stream of endingStreams ?? []) {
+                stream.readyToDelete = true;
                 if (stream.speechRecognizingResulted) {
-                    stream.stream.destroy();
+                    stream.closeStream();
+                    console.log(`❌  stream=${stream} was ready to delete, destroying..`);
                 } else {
-                    stream.readyToDelete = true;
                     setTimeout(() => {
                         if (!stream.stream.closed) {
                             console.log(`❌❌❌ stream=${stream} was not closed, destroying..`);
-                            stream.stream.destroy();
                         }
-                    }, 5000);
+                        stream.closeStream();
+                    }, 4000);
                 }
             }
             // if (endingStream) {
@@ -150,30 +152,52 @@ function handleAudioStreamDetection(
     });
     const transcriptionCallback = <ITranscriptionCallback>{
         onTranscriptionCompleted: (text: string) => {
-            // console.log("transcription callback", text);
-            activeStream.speechRecognizingResulted = true;
-            if (activeStream.readyToDelete) {
-                oggStream.destroy();
-            } else {
-                activeStream.readyToDelete = true;
-                console.log("activeStream was not ready to delete but transcription was completed");
+            console.log(
+                "transcription callback",
+                text,
+                "activeStream readyToDelete: ",
+                activeStream?.readyToDelete,
+            );
+            if (activeStream) {
+                activeStream.speechRecognizingResulted = true;
+                if (activeStream.readyToDelete) {
+                    activeStream.closeStream();
+                } else {
+                    activeStream.readyToDelete = true;
+                    console.log(
+                        "activeStream was not ready to delete but transcription was completed",
+                    );
+                }
             }
         },
     };
-    // console.log("checkingfor activation for user", userId);
-    doesStreamTriggerActivation(oggStream).then(result => {
-        if (result) {
-            console.log("triggered activation!!!");
-            // copy detection stream into a new stream
+    try {
+        // console.log("checkingfor activation for user", userId);
+        doesStreamTriggerActivation(oggStream).then(result => {
+            if (result) {
+                console.log(
+                    "triggered activation!!!",
+                    "oggStream destroyed: ",
+                    !!oggStream.destroyed,
+                    "oggStreamTranscription destroyed: ",
+                    oggStreamTranscription.destroyed,
+                );
+                // copy detection stream into a new stream
 
-            handleAudioStream(
-                oggStreamTranscription,
-                connection ?? null,
-                textChannel ?? null,
-                transcriptionCallback,
-            );
-        }
-    });
+                handleAudioStream(
+                    oggStreamTranscription,
+                    connection ?? null,
+                    textChannel ?? null,
+                    transcriptionCallback,
+                );
+            } else {
+                console.log("determined stream will not trigger activation, closing");
+                activeStream.closeStream();
+            }
+        });
+    } catch (error) {
+        console.error(error);
+    }
 
     return activeStream;
 }

@@ -10,7 +10,7 @@ const MODEL_PATH = "support/vosk/vosk-model-en-us-0.22";
 const MODEL_PATH_BIG = "support/vosk/vosk-model-en-us-0.42-gigaspeech"; //"vosk-model-en-us-0.22";
 const MODEL_PATH_SMALL = "support/vosk/vosk-model-small-en-us-0.15"; //"vosk-model-en-us-0.22";
 const model = new vosk.Model(MODEL_PATH);
-const sampleRate = 48000;
+const sampleRate = 16000;
 vosk.setLogLevel(0);
 
 export async function doesStreamTriggerActivation(audioStream: Stream.Readable): Promise<boolean> {
