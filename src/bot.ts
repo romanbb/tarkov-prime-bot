@@ -254,3 +254,7 @@ process.on("SIGINT", err => {
     cleanup({ exit: true });
 });
 process.on("SIGABRT", () => cleanup({ exit: true }));
+
+var SegfaultHandler = require("segfault-handler");
+
+SegfaultHandler.registerHandler("crash.log");
