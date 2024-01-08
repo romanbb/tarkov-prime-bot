@@ -26,6 +26,7 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
         const wfReader = new wav.Reader();
         const wfReadable = new Readable({ highWaterMark: 1024 }).wrap(wfReader);
 
+        // prevents double rec.free() calls which would cause segfaults
         let finished = false;
 
         const cleanupAndResolve = (result: boolean) => {
@@ -44,9 +45,6 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
         };
 
         const dataListener = async (data: Buffer) => {
-            // we need to remove the empty bytes:
-            // data = data.subarray(0, data.indexOf(0x00));
-
             const end_of_speech = rec.acceptWaveform(data);
 
             if (end_of_speech) {
@@ -91,6 +89,8 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
                     );
             })
             .pipe(wfReader, { end: true });
+
+        // prefer end of cmd event instead of end of stream above... not sure if it matters
         ffmpegCmd.on("end", async () => {
             // const finalResult = rec.finalResult();
             if (DEBUG_VOSK) console.log("ffmpegCmd end event");

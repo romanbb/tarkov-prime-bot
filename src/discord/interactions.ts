@@ -4,40 +4,28 @@ import {
     joinVoiceChannel,
     VoiceConnection,
     VoiceConnectionStatus,
-    VoiceReceiver,
 } from "@discordjs/voice";
 import {
     Client,
     CommandInteraction,
     GuildMember,
     Snowflake,
-    TextBasedChannel,
     TextChannel,
     VoiceBasedChannel,
-    VoiceChannel,
     EmbedBuilder,
-    GuildTextBasedChannel,
-    ActivityFlags,
 } from "discord.js";
-import { handleAudioStream } from "../bot";
-import { subscribeOpusStream } from "./createListeningStream";
+import { handleAudioStreamDetection } from "./createListeningStream";
 import Config from "../config.json";
 
-import * as prism from "prism-media";
 import {
     queryItems as queryItemsTarkovMarket,
     embedForItems as embedForItemsTarkovMarket,
-    getTtsString as getTtsStringTarkovMarket,
 } from "../flea/tarkov-market";
 import {
     queryItem as queryItemsTarkovDev,
     embedForItems as embedForItemsTarkovDev,
-    getTtsString as getTtsStringTarkovDev,
 } from "../flea/tarkov-dev";
-import { doesStreamTriggerActivation } from "../voice-detection/vosk";
-import { PassThrough, pipeline, Stream } from "stream";
 import { ActiveStream } from "../voice-detection/active-stream";
-import { ITranscriptionCallback } from "../voice-detection/transcription-models";
 
 const recording = new Set<Snowflake>();
 
@@ -121,85 +109,6 @@ export async function joinAndListen(
     } catch (error) {
         console.error(error);
     }
-}
-
-function handleAudioStreamDetection(
-    voiceConnection: VoiceConnection | undefined,
-    receiver: VoiceReceiver,
-    userId: Snowflake,
-    connection?: VoiceConnection,
-    textChannel?: TextBasedChannel | GuildTextBasedChannel,
-): ActiveStream {
-    const opusStream = subscribeOpusStream(receiver, userId);
-
-    const activeStream = new ActiveStream(userId, opusStream);
-
-    const oggStream = new prism.opus.OggLogicalBitstream({
-        opusHead: new prism.opus.OpusHead({
-            channelCount: 2,
-            sampleRate: 48000,
-        }),
-    });
-
-    const oggStreamTranscription = new PassThrough();
-    pipeline(opusStream, oggStream, oggStreamTranscription, err => {
-        if (err) {
-            console.warn(`❌ Error recording stream err: ${err.message}`);
-        }
-        //  else {
-        // 	console.log(`✅ Recording stream`);
-        // }
-    });
-    const transcriptionCallback = <ITranscriptionCallback>{
-        onTranscriptionCompleted: (text: string) => {
-            console.log(
-                "transcription callback",
-                text,
-                "activeStream readyToDelete: ",
-                activeStream?.readyToDelete,
-            );
-            if (activeStream) {
-                activeStream.speechRecognizingResulted = true;
-                if (activeStream.readyToDelete) {
-                    activeStream.closeStream();
-                } else {
-                    activeStream.readyToDelete = true;
-                    console.log(
-                        "activeStream was not ready to delete but transcription was completed",
-                    );
-                }
-            }
-        },
-    };
-    try {
-        // console.log("checkingfor activation for user", userId);
-        doesStreamTriggerActivation(oggStream).then(result => {
-            if (result) {
-                console.log(
-                    "triggered activation!!!",
-                    "oggStream destroyed: ",
-                    !!oggStream.destroyed,
-                    "oggStreamTranscription destroyed: ",
-                    oggStreamTranscription.destroyed,
-                );
-                // copy detection stream into a new stream
-
-                handleAudioStream(
-                    oggStreamTranscription,
-                    connection ?? null,
-                    textChannel ?? null,
-                    transcriptionCallback,
-                );
-            } else {
-                console.log("determined stream will not trigger activation, closing");
-                activeStream.closeStream();
-            }
-        });
-    } catch (error) {
-        console.error(error);
-    }
-
-    return activeStream;
 }
 
 async function join(
