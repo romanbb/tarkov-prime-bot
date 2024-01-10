@@ -129,7 +129,7 @@ client.on(Events.Error, console.warn);
  * @param string transcript to look for phrases to pull keywords out of
  * @returns the keyword to lookup if one was found
  */
-async function processTranscript(string: string | undefined): Promise<string | undefined> {
+export async function processTranscript(string: string | undefined): Promise<string | undefined> {
     console.log("💬 Processing transcript: ", string);
     var result = undefined;
     if (string) {
@@ -159,7 +159,7 @@ export async function handleAudioStream(
     textChannelOutput: TextBasedChannel | GuildTextBasedChannel | null,
     transcriptionCallback?: ITranscriptionCallback,
 ) {
-    transcribeStreamAzure(undefined, audioStream)
+    transcribeStreamAzure(undefined, audioStream as any)
         .then(transcript => {
             if (transcriptionCallback) {
                 console.log("calling transcription callback");
@@ -174,7 +174,7 @@ export async function handleAudioStream(
         });
 }
 
-async function handleQueryItemsInternal(
+export async function handleQueryItemsInternal(
     query: string | undefined,
     voiceConnection: VoiceConnection | null,
     textChannelOutput: TextBasedChannel | GuildTextBasedChannel | null,

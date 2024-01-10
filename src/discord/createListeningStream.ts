@@ -10,7 +10,7 @@ import type { GuildTextBasedChannel, Snowflake, TextBasedChannel, User } from "d
 import * as prism from "prism-media";
 import type Stream from "node:stream";
 import { handleAudioStream } from "../bot";
-import { ActiveStream } from "../voice-detection/active-stream";
+import { UserState } from "../voice-detection/user-state";
 import { ITranscriptionCallback } from "../voice-detection/transcription-models";
 import { doesStreamTriggerActivation } from "../voice-detection/vosk";
 
@@ -69,15 +69,14 @@ export function subscribeOpusStream(receiver: VoiceReceiver, userId: string): Au
 }
 
 export function handleAudioStreamDetection(
-    voiceConnection: VoiceConnection | undefined,
-    receiver: VoiceReceiver,
+    opusStream: AudioReceiveStream,
     userId: Snowflake,
     connection?: VoiceConnection,
     textChannel?: TextBasedChannel | GuildTextBasedChannel,
-): ActiveStream {
-    const opusStream = subscribeOpusStream(receiver, userId);
+): UserState {
+    // const opusStream = subscribeOpusStream(receiver, userId);
 
-    const activeStream = new ActiveStream(userId, opusStream);
+    // const activeStream = new ActiveStream(userId, opusStream);
 
     const oggStream = new prism.opus.OggLogicalBitstream({
         // highWaterMark: 1024,
@@ -97,49 +96,50 @@ export function handleAudioStreamDetection(
         // 	console.log(`✅ Recording stream`);
         // }
     });
+    return null;
     // oggStream.pipe(oggStreamTranscription);
-    const transcriptionCallback = <ITranscriptionCallback>{
-        onTranscriptionCompleted: (text: string) => {
-            oggStreamTranscription.destroy();
-            console.log(
-                "transcription callback",
-                text,
-                "activeStream readyToDelete: ",
-                activeStream?.readyToDelete,
-            );
-            if (activeStream) {
-                activeStream.speechRecognizingResulted = true;
-                if (activeStream.readyToDelete) {
-                    activeStream.closeStream();
-                } else {
-                    activeStream.readyToDelete = true;
-                    console.log(
-                        "activeStream was not ready to delete but transcription was completed",
-                    );
-                }
-            }
-        },
-    };
-    try {
-        // console.log("checkingfor activation for user", userId);
-        doesStreamTriggerActivation(oggStream).then(result => {
-            if (result) {
-                // use separate stream for transcription
-                handleAudioStream(
-                    oggStreamTranscription,
-                    connection ?? null,
-                    textChannel ?? null,
-                    transcriptionCallback,
-                );
-            } else {
-                console.log("determined stream will not trigger activation, closing");
-                oggStreamTranscription.destroy();
-                activeStream.closeStream();
-            }
-        });
-    } catch (error) {
-        console.error(error);
-    }
+    // const transcriptionCallback = <ITranscriptionCallback>{
+    //     onTranscriptionCompleted: (text: string) => {
+    //         oggStreamTranscription.destroy();
+    //         console.log(
+    //             "transcription callback",
+    //             text,
+    //             "activeStream readyToDelete: ",
+    //             activeStream?.readyToDelete,
+    //         );
+    //         if (activeStream) {
+    //             activeStream.speechRecognizingResulted = true;
+    //             if (activeStream.readyToDelete) {
+    //                 activeStream.closeStream();
+    //             } else {
+    //                 activeStream.readyToDelete = true;
+    //                 console.log(
+    //                     "activeStream was not ready to delete but transcription was completed",
+    //                 );
+    //             }
+    //         }
+    //     },
+    // };
+    // try {
+    //     // console.log("checkingfor activation for user", userId);
+    //     doesStreamTriggerActivation(oggStream).then(result => {
+    //         if (result) {
+    //             // use separate stream for transcription
+    //             handleAudioStream(
+    //                 oggStreamTranscription,
+    //                 connection ?? null,
+    //                 textChannel ?? null,
+    //                 transcriptionCallback,
+    //             );
+    //         } else {
+    //             console.log("determined stream will not trigger activation, closing");
+    //             oggStreamTranscription.destroy();
+    //             activeStream.closeStream();
+    //         }
+    //     });
+    // } catch (error) {
+    //     console.error(error);
+    // }
 
-    return activeStream;
+    // return activeStream;
 }

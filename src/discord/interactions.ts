@@ -1,4 +1,6 @@
 import {
+    AudioReceiveStream,
+    EndBehaviorType,
     entersState,
     getVoiceConnection,
     joinVoiceChannel,
@@ -27,11 +29,12 @@ import {
     queryItem as queryItemsTarkovDev,
     embedForItems as embedForItemsTarkovDev,
 } from "../flea/tarkov-dev";
-import { ActiveStream } from "../voice-detection/active-stream";
+import { UserState } from "../voice-detection/user-state";
+import { opus } from "prism-media";
 
 const recording = new Set<Snowflake>();
 
-const activeStreams = new Map<Snowflake, Array<ActiveStream>>();
+const activeStreams = new Map<Snowflake, UserState>();
 /**
  * Debug helper
  * @param recordable
@@ -64,6 +67,7 @@ export async function joinAndListen(
         await entersState(connection, VoiceConnectionStatus.Ready, 20e3);
         const receiver = connection.receiver;
 
+        console.log("interactions :: registering start and end listeners");
         receiver.speaking.on("start", setupStartEvent(connection, _textChannel));
         receiver.speaking.on("end", endEvent);
     } catch (error) {
@@ -79,16 +83,19 @@ const setupStartEvent = (
         // if (!recording.has(userId)) {
         // recording.add(userId);
 
-        console.log(`+${userId} 💬 listening from joinAndListen`);
-        const stream = handleAudioStreamDetection(
-            connection,
-            connection.receiver,
-            userId,
-            connection,
-            channel ?? undefined,
-        );
-        const currentStreams = activeStreams.get(userId) ?? new Array<ActiveStream>();
-        activeStreams.set(userId, currentStreams.concat(stream));
+        console.log(`+${userId} 💬 started talking`);
+        // const stream = handleAudioStreamDetection(
+        //     connection,
+        //     connection.receiver,
+        //     userId,
+        //     connection,
+        //     channel ?? undefined,
+        // );
+
+        const userState = activeStreams.get(userId) ?? new UserState(userId);
+        activeStreams.set(userId, userState);
+
+        userState.onNewStream(connection, channel);
         // }
     };
 };
@@ -99,20 +106,7 @@ const endEvent = userId => {
     activeStreams.delete(userId);
     console.log(`-${userId} 💬 done speaking for stream ${endingStreams}`);
 
-    for (const stream of endingStreams ?? []) {
-        stream.readyToDelete = true;
-        if (stream.speechRecognizingResulted) {
-            stream.closeStream();
-            console.log(`❌  stream=${stream} was ready to delete, destroying..`);
-        } else {
-            setTimeout(() => {
-                if (!stream.stream.closed) {
-                    console.log(`❌❌❌ stream=${stream} was not closed, destroying..`);
-                }
-                stream.closeStream();
-            }, 4000);
-        }
-    }
+    endingStreams.onUserStoppedTalking();
 };
 
 async function join(
@@ -121,6 +115,7 @@ async function join(
     _client: Client,
     connection?: VoiceConnection,
 ) {
+    console.log("join called");
     await interaction.deferReply({ ephemeral: true });
     if (!connection) {
         if (interaction.member instanceof GuildMember && interaction.member.voice.channel) {

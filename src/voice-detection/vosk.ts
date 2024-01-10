@@ -1,4 +1,4 @@
-import vosk from "vosk";
+import vosk, { SpeakerRecognizerParam } from "vosk";
 import wav from "wav";
 import { Readable } from "stream";
 import ffmpeg from "fluent-ffmpeg";
@@ -13,15 +13,20 @@ const model = new vosk.Model(MODEL_PATH);
 const sampleRate = 16000;
 vosk.setLogLevel(0);
 
+export function getVoskRecognize(): vosk.Recognizer<SpeakerRecognizerParam> {
+    const rec = new vosk.Recognizer({
+        model: model,
+        sampleRate: sampleRate,
+    });
+    rec.setPartialWords(true);
+    rec.setWords(true);
+    rec.setMaxAlternatives(3);
+    return rec;
+}
+
 export async function doesStreamTriggerActivation(audioStream: Stream.Readable): Promise<boolean> {
     return new Promise((resolve, reject) => {
-        const rec = new vosk.Recognizer({
-            model: model,
-            sampleRate: sampleRate,
-        });
-        rec.setPartialWords(true);
-        rec.setWords(true);
-        rec.setMaxAlternatives(3);
+        const rec = getVoskRecognize();
 
         const wfReader = new wav.Reader();
         const wfReadable = new Readable().wrap(wfReader);
@@ -102,7 +107,7 @@ export async function doesStreamTriggerActivation(audioStream: Stream.Readable):
  * @param results The recognition results to check.
  * @returns A promise that resolves to a boolean indicating whether the results contain trigger keywords.
  */
-async function doesContainTriggerKeywords(
+export async function doesContainTriggerKeywords(
     results: vosk.RecognitionResults | vosk.PartialResults,
 ): Promise<boolean> {
     // if (DEBUG_VOSK) console.log("doesContainTriggerKeywords", results);
