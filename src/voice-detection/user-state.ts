@@ -9,48 +9,83 @@ import { doesContainTriggerKeywords, getVoskRecognize } from "./vosk";
 import { transcribeStreamAzure } from "../voice/azure";
 import { handleQueryItemsInternal, processTranscript } from "../bot";
 import { GuildTextBasedChannel, TextBasedChannel } from "discord.js";
-import { buffer } from "stream/consumers";
-export class UserState {
-    internalActiveStreamId: string = new Date().getTime().toString();
+import { subscribeOpusStream } from "../discord/createListeningStream";
 
-    stream: AudioReceiveStream | undefined;
-    readyToDelete: boolean = false;
-    userId: string;
-    speechRecognizingResulted: boolean = false; // Add userDoneSpeaking property
-
-    private userTimeoutHandle: NodeJS.Timeout | undefined;
-
-    private transcriptionStarted: boolean = false;
+export class UserVoiceSession {
     private connection: VoiceConnection;
     private channel?: TextBasedChannel | GuildTextBasedChannel;
+    private userId: string;
+
+    private releasedSpeakingResources: boolean = false;
 
     /**
-     * The OGG stream of the audio data
+     * The discord opus stream
      */
-    private oggStream: prism.opus.OggLogicalBitstream;
-
-    private oggStreamPassthrough: PassThrough;
-
+    stream: AudioReceiveStream | undefined;
     /**
-     * The WAV audio stream that
+     * The ogg stream which comes from the opus stream
      */
-    private wavAudioStream: wav.Reader;
-    // private wavAudioStreamTranscribe: wav.Reader;
-    private voskRecognizser: vosk.Recognizer<SpeakerRecognizerParam>;
+    oggStream: prism.opus.OggLogicalBitstream = new prism.opus.OggLogicalBitstream({
+        opusHead: new prism.opus.OpusHead({
+            channelCount: 2,
+            sampleRate: 48000,
+        }),
+        pageSizeControl: {
+            maxPackets: 10,
+        },
+    });
+    /**
+     * The wav stream which comes from the oggStream
+     */
+    wavAudioStream: wav.Reader = new wav.Reader();
 
     /**
-     * The vosk data listener
+     * The ogg passthrough stream, a copy of the original stream which will be used for transcription
+     */
+    oggStreamPassthrough: PassThrough = new PassThrough();
+
+    /**
+     * Only start transcription once.
+     */
+    transcriptionStarted: boolean = false;
+
+    /**
+     * The voice recognition engine
+     */
+    voskRecognizser: vosk.Recognizer<SpeakerRecognizerParam>;
+
+    public constructor(
+        userId: string,
+        connection: VoiceConnection,
+        channel?: TextBasedChannel | GuildTextBasedChannel,
+    ) {
+        this.userId = userId;
+        this.connection = connection;
+        this.channel = channel;
+        this.voskRecognizser = getVoskRecognize();
+
+        // subscribe to the opus stream
+        this.stream = subscribeOpusStream(connection.receiver, this.userId);
+        // pipe opus stream to ogg, then to the pass through
+        pipeline(this.stream, this.oggStream, this.oggStreamPassthrough, err => {
+            if (err) {
+                console.error("Error in pipeline", err);
+            }
+        });
+        // this.stream.pipe(this.oggStream).pipe(this.oggStreamPassthrough);
+        // this.stream.on("data", () => {
+        //     console.log("got an opus packet");
+        // });
+        // this.oggStream.on("data", () => {
+        //     console.log("got an ogg packet");
+        // });
+    }
+    /**
+     * The vosk data listener, writes data to vosk and does eager detection for trigger keywords
      * @param data Buffer
      */
-    private voskDataListener = async (data: Buffer) => {
-        console.log("voskDataListener wrote data");
-        // this.wavTranscriptionStream.write(data);
-
-        // if (!!this.userTimeoutHandle) {
-        //     console.log(" -> clearing timeout handle");
-        //     clearTimeout(this.userTimeoutHandle);
-        //     this.userTimeoutHandle = undefined;
-        // }
+    voskDataListener = async (data: Buffer) => {
+        // console.log("voskDataListener wrote data");
 
         // also write to vosk recognizer
         const end_of_speech = this.voskRecognizser.acceptWaveform(data);
@@ -72,20 +107,69 @@ export class UserState {
     /**
      * The vosk completion listener.
      */
-    private voskCompletionListener = async () => {
+    voskCompletionListener = async () => {
         const finalResult = this.voskRecognizser.finalResult();
-        // console.log(
-        //     "ffmpeg--oggStream end event: finished reading data, finalResult: ",
-        //     finalResult,
-        // );
+        console.log("vosk end event: finished reading data, finalResult: ", finalResult);
 
         let containsKeywords = await doesContainTriggerKeywords(finalResult);
         if (containsKeywords) {
             this.startTranscription();
         }
+        this.voskRecognizser.free();
     };
 
-    private wavTranscriptionStream: PassThrough;
+    /**
+     * Start the transcription process. Cleans up stream after.
+     * @returns
+     */
+    startTranscription() {
+        if (this.transcriptionStarted) {
+            console.log("transcription already started, avoiding starting again.");
+            return;
+        }
+        this.transcriptionStarted = true;
+
+        // go!
+        transcribeStreamAzure(undefined, this.oggStreamPassthrough)
+            .then(transcription => {
+                // console.log("transcript callback, destroying wav transcript stream");
+                this.oggStreamPassthrough.destroy();
+                return transcription;
+            })
+            .then(processTranscript)
+            .then(query => handleQueryItemsInternal(query, this.connection, this.channel))
+            .catch(error => {
+                console.error("❌ Error in transcribe process", error);
+            });
+    }
+
+    async releaseSpeakingResources() {
+        console.log("releaseAllResources called");
+        // this.stream.unpipe();
+        // this.oggStream.unpipe();
+
+        // this.wavAudioStream.end();
+        // this.oggStream.end();
+
+        // this.oggStream.destroy();
+        // this.stream.destroy();
+
+        // await this.voskCompletionListener();
+        // this.voskRecognizser.free();
+        // this.releasedSpeakingResources = true;
+    }
+}
+
+export class UserState {
+    internalActiveStreamId: string = new Date().getTime().toString();
+
+    userId: string;
+
+    private lastActiveUserSession: UserVoiceSession | undefined;
+    private userTimeoutHandle: NodeJS.Timeout | undefined;
+
+    private connection: VoiceConnection;
+    private channel?: TextBasedChannel | GuildTextBasedChannel;
 
     public constructor(userId: string) {
         this.userId = userId;
@@ -96,75 +180,21 @@ export class UserState {
     onStartRecognitionSession() {
         console.log("onStartRecognitionSession for ", this.userId);
 
-        this.voskRecognizser = getVoskRecognize();
+        const userSession = new UserVoiceSession(this.userId, this.connection, this.channel);
 
-        this.stream = this.connection.receiver.subscribe(this.userId, {
-            // highWaterMark: 24,
-            // objectMode: true,
+        this.lastActiveUserSession = userSession;
 
-            end: {
-                // behavior: EndBehaviorType.Manual,
-                behavior: EndBehaviorType.AfterSilence,
-                duration: 1000,
-            },
-        });
-        this.oggStream = new prism.opus.OggLogicalBitstream({
-            opusHead: new prism.opus.OpusHead({
-                channelCount: 2,
-                sampleRate: 48000,
-            }),
-            pageSizeControl: {
-                maxPackets: 10,
-            },
-        });
-        this.wavAudioStream = new wav.Reader();
-
-        this.oggStreamPassthrough = new PassThrough();
-        // this.wavAudioStreamTranscribe = new wav.Reader().wrap(this.wavAudioStream);
-        // this.wavTranscriptionStream = new PassThrough(); //.wrap(this.wavAudioStream);
-        pipeline(this.stream, this.oggStream, this.oggStreamPassthrough, err => {
-            if (err) {
-                console.error("pipeline error", err);
-            }
-        });
-
-        // this.stream.on("data", () => {
-        //     console.log("got an opus packet");
-        // });
-        // this.oggStream.on("data", () => {
-        //     console.log("got an ogg packet");
-        // });
-
-        this.transcriptionStarted = false;
-        this.readyToDelete = false;
+        return userSession;
     }
     /**
      * Called when we determined the user stops talking. May be called after user stops talking event
      */
-    async onStopRecognitionSession() {
+    async onStopRecognitionSession(session: UserVoiceSession) {
         console.log("onStopRecognitionSession for ", this.userId);
 
         this.userTimeoutHandle = undefined;
-
-        this.readyToDelete = true;
-
-        this.stream.unpipe();
-        this.oggStream.unpipe();
-        // this.wavAudioStream.unpipe();
-        // this.wavTranscriptionStream.unpipe();
-
-        // this.oggStreamTranscription.unpipe();
-
-        // this.oggStream.
-        this.wavAudioStream.end();
-        this.oggStream.end();
-        // this.wavTranscriptionStream.end();
-
-        this.oggStream.destroy();
-        this.stream.destroy();
-
-        await this.voskCompletionListener();
-        this.voskRecognizser.free();
+        await session.releaseSpeakingResources();
+        this.lastActiveUserSession = undefined;
     }
     /**
      * Might be called in the middle of a recognition session, or after one was handled
@@ -173,47 +203,33 @@ export class UserState {
      * @param channel
      */
     onNewStream(connection: VoiceConnection, channel?: TextBasedChannel | GuildTextBasedChannel) {
-        // if (this.stream != undefined) {
-        //     this.stream.unpipe();
-        //     this.oggStream.unpipe();
-        //     this.wavTranscriptionStream.unpipe();
-
-        //     // not destroying them but unhooking...
-        // }
-
         console.log("onNewStream for ", this.userId, "timeout handle: ", !!this.userTimeoutHandle);
         this.connection = connection;
         this.channel = channel;
+
+        // let session = this.userSession;
+        let session: UserVoiceSession = this.lastActiveUserSession;
 
         if (!!this.userTimeoutHandle) {
             console.log(" -> clearing timeout handle");
             clearTimeout(this.userTimeoutHandle);
             this.userTimeoutHandle = undefined;
-        } else if (this.oggStream == undefined || this.oggStream.destroyed) {
-            console.log(" -> onStartRecognitionSession", this.oggStream?.destroyed);
-            this.onStartRecognitionSession();
-            // this.stream.pipe(this.oggStream);
+        } else if (
+            session == undefined ||
+            session?.oggStream === undefined ||
+            session?.oggStream.destroyed == true
+        ) {
+            console.log(" -> onStartRecognitionSession", session?.oggStream.destroyed);
+            session = this.onStartRecognitionSession();
         } else {
             console.log("note: no timeout to clear, and old stream is not destroyed.");
         }
 
-        // pipeline(this.stream, this.oggStream, err => (err ? console.error(err) : null));
-
-        // console.log(
-        //     "stream: ",
-        //     stream,
-        //     "this.oggStream: ",
-        //     this.oggStream,
-        //     "this.oggStreamTranscription: ",
-        //     this.wavTranscriptionStream,
-        // );
-
         // const wfReader = new wav.Reader();
-        const wfReadable = new Readable().wrap(this.wavAudioStream);
-        wfReadable.on("data", this.voskDataListener);
-        // pipeline(wfReadable, this.wavTranscriptionStream, err => (err ? console.error(err) : null));
+        const wfReadable = new Readable().wrap(session.wavAudioStream);
+        wfReadable.on("data", session.voskDataListener);
 
-        ffmpeg(this.oggStream)
+        ffmpeg(session.oggStream)
             .audioChannels(1)
             .audioFrequency(16000)
             .audioCodec("pcm_s16le")
@@ -226,50 +242,19 @@ export class UserState {
             .on("start", () => {
                 console.log("start on oggStream ffmpeg");
             })
-            .on("end", this.voskCompletionListener)
-            .pipe(this.wavAudioStream, { end: false });
-
-        // .on("data", this.voskDataListener)
-        // .pipe(require("fs").createWriteStream("test.wav"), { end: true });
-        // .pipe(this.wavTranscriptionStream, { end: false });
+            .on("end", session.voskCompletionListener)
+            .pipe(session.wavAudioStream, { end: true });
     }
     async onUserStoppedTalking() {
         this.connection.removeAllListeners(this.userId);
+        const session = this.lastActiveUserSession;
         this.userTimeoutHandle = setTimeout(() => {
-            this.onStopRecognitionSession();
-        }, 1000);
+            this.onStopRecognitionSession(session ?? this.lastActiveUserSession);
+        }, 500);
         console.log("onUserStoppedTalking for ", this.userId);
     }
-    startTranscription() {
-        if (this.transcriptionStarted) {
-            console.log("transcription already started, avoiding starting again.");
-            return;
-        }
-        this.transcriptionStarted = true;
 
-        // go!
-        transcribeStreamAzure(undefined, this.oggStreamPassthrough)
-            .then(transcription => {
-                this.speechRecognizingResulted = true;
-                console.log("transcript callback, destroying wav transcript stream");
-                this.oggStreamPassthrough.destroy();
-                // this.wavTranscriptionStream.destroy();
-                return transcription;
-            })
-            .then(processTranscript)
-            .then(query => handleQueryItemsInternal(query, this.connection, this.channel))
-            .catch(error => {
-                console.error("❌ Error in transcribe process", error);
-            });
-        // this.oggStreamTranscription.uncork();
-    }
-    closeStream() {
-        if (this.stream && !this.stream.destroyed && this.readyToDelete) {
-            console.log("closing stream for ", this.userId, "id:", this.internalActiveStreamId);
-            this.stream.destroy();
-        }
-    }
     toString() {
-        return `ActiveStream: ${this.userId}, {readyToDelete: ${this.readyToDelete}, speechRecognizingResulted: ${this.speechRecognizingResulted}}`;
+        return `UserState: ${this.userId}`;
     }
 }

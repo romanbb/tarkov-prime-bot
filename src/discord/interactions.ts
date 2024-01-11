@@ -1,6 +1,4 @@
 import {
-    AudioReceiveStream,
-    EndBehaviorType,
     entersState,
     getVoiceConnection,
     joinVoiceChannel,
@@ -18,7 +16,6 @@ import {
     TextBasedChannel,
     GuildTextBasedChannel,
 } from "discord.js";
-import { handleAudioStreamDetection } from "./createListeningStream";
 import Config from "../config.json";
 
 import {
@@ -84,13 +81,6 @@ const setupStartEvent = (
         // recording.add(userId);
 
         console.log(`+${userId} 💬 started talking`);
-        // const stream = handleAudioStreamDetection(
-        //     connection,
-        //     connection.receiver,
-        //     userId,
-        //     connection,
-        //     channel ?? undefined,
-        // );
 
         const userState = activeStreams.get(userId) ?? new UserState(userId);
         activeStreams.set(userId, userState);
