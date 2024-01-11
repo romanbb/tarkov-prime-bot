@@ -5,11 +5,11 @@ import * as prism from "prism-media";
 import wav from "wav";
 import ffmpeg from "fluent-ffmpeg";
 import vosk, { SpeakerRecognizerParam } from "vosk";
-import { doesContainTriggerKeywords, getVoskRecognize } from "./vosk";
-import { transcribeStreamAzure } from "../voice/azure";
-import { handleQueryItemsInternal, processTranscript } from "../bot";
+import { doesContainTriggerKeywords, getVoskRecognize } from "./voice-detection/vosk";
+import { transcribeStreamAzure } from "./voice/azure";
+import { handleQueryItemsInternal, processTranscript } from "./bot";
 import { GuildTextBasedChannel, TextBasedChannel } from "discord.js";
-import { subscribeOpusStream } from "../discord/createListeningStream";
+import { subscribeOpusStream } from "./discord/createListeningStream";
 
 export class UserVoiceSession {
     private connection: VoiceConnection;

@@ -26,7 +26,7 @@ import {
     queryItem as queryItemsTarkovDev,
     embedForItems as embedForItemsTarkovDev,
 } from "../flea/tarkov-dev";
-import { UserState } from "../voice-detection/user-state";
+import { UserState } from "../user-state";
 import { opus } from "prism-media";
 
 const recording = new Set<Snowflake>();
