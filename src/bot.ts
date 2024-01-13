@@ -133,10 +133,10 @@ export async function processTranscript(string: string | undefined): Promise<str
     console.log("💬 Processing transcript: ", string);
     var result = undefined;
     if (string) {
-        const regexCollection = Config.key_phrases.flatMap(phrase => `${phrase}`);
+        const regexCollection = Config.key_phrases;
 
         regexCollection.forEach(regex => {
-            const match = string.toLowerCase().match(regex);
+            const match = string.trim().toLowerCase().match(regex);
 
             if (match && match.length > 0) {
                 // console.log("found item", match[1]);

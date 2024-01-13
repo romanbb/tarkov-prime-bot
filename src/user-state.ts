@@ -54,6 +54,14 @@ export class UserVoiceSession {
      */
     voskRecognizser: vosk.Recognizer<SpeakerRecognizerParam>;
 
+    transcriptionResult: string = "";
+
+    startTimestamp: number = new Date().getTime();
+    endOfflineDetectionTimestamp: number = 0;
+    endSpeakingTimestamp: number = 0;
+    endTranscriptionTimestamp: number = 0;
+    endItemQueryTimestamp: number = 0;
+
     public constructor(
         userId: string,
         connection: VoiceConnection,
@@ -67,10 +75,20 @@ export class UserVoiceSession {
         // subscribe to the opus stream
         this.stream = subscribeOpusStream(connection.receiver, this.userId);
         // pipe opus stream to ogg, then to the pass through
-        pipeline(this.stream, this.oggStream, this.oggStreamPassthrough, err => {
-            if (err) {
-                console.error("Error in pipeline", err);
-            }
+        this.stream.pipe(this.oggStream).pipe(this.oggStreamPassthrough);
+
+        this.oggStream.on("end", async () => {
+            console.log("oggStream end event");
+        });
+
+        this.stream.on("pause", () => {
+            console.log("opus stream pause event");
+        });
+        this.stream.on("resume", () => {
+            console.log("opus stream resume event");
+        });
+        this.stream.on("end", () => {
+            console.log("opus stream end event");
         });
         // this.stream.pipe(this.oggStream).pipe(this.oggStreamPassthrough);
         // this.stream.on("data", () => {
@@ -86,6 +104,12 @@ export class UserVoiceSession {
      */
     voskDataListener = async (data: Buffer) => {
         // console.log("voskDataListener wrote data");
+        if (this.releasedSpeakingResources) {
+            console.log(
+                "!!!!!!!!!!!!!!! voskDataListener: releasedSpeakingResources, returning early",
+            );
+            return;
+        }
 
         // also write to vosk recognizer
         const end_of_speech = this.voskRecognizser.acceptWaveform(data);
@@ -108,6 +132,15 @@ export class UserVoiceSession {
      * The vosk completion listener.
      */
     voskCompletionListener = async () => {
+        if (this.releasedSpeakingResources) {
+            console.log(
+                "!!!!!!!!!!!!!!! voskDataListener: releasedSpeakingResources, returning early",
+            );
+            return;
+        }
+        this.releasedSpeakingResources = true;
+        this.endOfflineDetectionTimestamp = new Date().getTime();
+
         const finalResult = this.voskRecognizser.finalResult();
         console.log("vosk end event: finished reading data, finalResult: ", finalResult);
 
@@ -132,31 +165,59 @@ export class UserVoiceSession {
         // go!
         transcribeStreamAzure(undefined, this.oggStreamPassthrough)
             .then(transcription => {
+                this.transcriptionResult = transcription;
+                this.endTranscriptionTimestamp = new Date().getTime();
                 // console.log("transcript callback, destroying wav transcript stream");
+                this.oggStream.unpipe();
                 this.oggStreamPassthrough.destroy();
                 return transcription;
             })
             .then(processTranscript)
             .then(query => handleQueryItemsInternal(query, this.connection, this.channel))
+            .then(() => {
+                this.endItemQueryTimestamp = new Date().getTime();
+                this.printMetrics();
+            })
             .catch(error => {
                 console.error("❌ Error in transcribe process", error);
             });
     }
+    printMetrics = () => {
+        const metrics = {
+            Metrics: "------------------------------------",
+            "User Id": this.userId,
+            "Transcription Result": this.transcriptionResult,
+            "🗣️ Offline Detection Time": `${
+                this.endOfflineDetectionTimestamp - this.startTimestamp
+            } ms`,
+            "💬 Speaking Time": `${this.endSpeakingTimestamp - this.startTimestamp} ms`,
+            "📝 Transcription Time": `${
+                this.endTranscriptionTimestamp - this.endSpeakingTimestamp
+            } ms`,
+            "🌎 Item Query Time": `${
+                this.endItemQueryTimestamp - this.endTranscriptionTimestamp
+            } ms`,
+            "⏳ Total Time after user done speaking": `${
+                this.endItemQueryTimestamp - this.endSpeakingTimestamp
+            } ms`,
+            "🕦 Total Time": `${this.endItemQueryTimestamp - this.startTimestamp} ms`,
+        };
+
+        console.log(metrics);
+    };
 
     async releaseSpeakingResources() {
         console.log("releaseAllResources called");
-        // this.stream.unpipe();
-        // this.oggStream.unpipe();
+        this.stream.unpipe();
 
         // this.wavAudioStream.end();
-        // this.oggStream.end();
-
+        this.oggStream.end();
         // this.oggStream.destroy();
-        // this.stream.destroy();
+        // this.stream();
+        this.stream.destroy();
 
         // await this.voskCompletionListener();
         // this.voskRecognizser.free();
-        // this.releasedSpeakingResources = true;
     }
 }
 
@@ -211,10 +272,12 @@ export class UserState {
         let session: UserVoiceSession = this.lastActiveUserSession;
 
         if (!!this.userTimeoutHandle) {
+            // previous user session
             console.log(" -> clearing timeout handle");
             clearTimeout(this.userTimeoutHandle);
             this.userTimeoutHandle = undefined;
-        } else if (
+        }
+        if (
             session == undefined ||
             session?.oggStream === undefined ||
             session?.oggStream.destroyed == true
@@ -225,7 +288,6 @@ export class UserState {
             console.log("note: no timeout to clear, and old stream is not destroyed.");
         }
 
-        // const wfReader = new wav.Reader();
         const wfReadable = new Readable().wrap(session.wavAudioStream);
         wfReadable.on("data", session.voskDataListener);
 
@@ -237,7 +299,6 @@ export class UserState {
             .format("wav")
             .on("error", err => {
                 console.log("ffmpeg--oggStreamAn error occurred: " + err.message + ", err" + err);
-                // cleanupAndResolve(false);
             })
             .on("start", () => {
                 console.log("start on oggStream ffmpeg");
@@ -248,6 +309,13 @@ export class UserState {
     async onUserStoppedTalking() {
         this.connection.removeAllListeners(this.userId);
         const session = this.lastActiveUserSession;
+
+        // not sure if necessary, but resume the stream to keep the bits flowing if possible
+        session.stream.resume();
+
+        session.endSpeakingTimestamp = new Date().getTime();
+
+        // schedule a cleanup
         this.userTimeoutHandle = setTimeout(() => {
             this.onStopRecognitionSession(session ?? this.lastActiveUserSession);
         }, 500);

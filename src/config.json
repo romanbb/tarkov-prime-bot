@@ -3,8 +3,8 @@
     "hotword_regex": "(.*?)(check|price|price check|check price)(.*)",
     "key_phrases": [
         "check[,.]? ([0-9A-Za-z()\\-\\s]+)([.,]?)",
-        "price check[,.]? ([0-9A-Za-z()\\-\\s]+)([.,]?)",
-        "check price[,.]? ([0-9A-Za-z()\\-\\s]+)([.,]?)"
+        "price[,.] check[,.]? ([0-9A-Za-z()\\-\\s]+)([.,]?)",
+        "check[,/] price[,.]? ([0-9A-Za-z()\\-\\s]+)([.,]?)"
     ],
     "maxTransmissionGap": 5000
 }

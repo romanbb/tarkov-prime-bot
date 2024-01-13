@@ -1,7 +1,6 @@
 import * as sdk from "microsoft-cognitiveservices-speech-sdk";
 import configEnv from "../config.env";
 import type Stream from "stream";
-import vosk from "vosk";
 import ffmpeg from "fluent-ffmpeg";
 import wav from "wav";
 import { Readable } from "stream";
@@ -13,15 +12,18 @@ var config = sdk.SpeechConfig.fromSubscription(
 );
 config.endpointId = configEnv.azure.voice_endpoint_id;
 
+const DEBUG_AZURE = false;
+const prefix = "azure transcribe: ";
+
 export async function transcribeStreamAzure(
     filename: string | undefined,
     stream: Stream.Readable,
 ): Promise<string | undefined> {
-    console.log("transcribeStreamAzure called");
+    if (DEBUG_AZURE) console.log(prefix, "transcribeStreamAzure called");
     return new Promise((resolve, reject) => {
         try {
             let pushStream = sdk.AudioInputStream.createPushStream();
-            console.log("   created push stream");
+            if (DEBUG_AZURE) console.log(prefix, "   created push stream");
             const wfReader = new wav.Reader();
             const wfReadable = new Readable().wrap(wfReader);
 
@@ -37,27 +39,28 @@ export async function transcribeStreamAzure(
                 .audioCodec("pcm_s16le")
                 .format("wav")
                 .on("error", err => {
-                    console.log("An error occurred: " + err.message + ", err" + err);
+                    if (DEBUG_AZURE)
+                        console.log(prefix, "An error occurred: " + err.message + ", err" + err);
                     reject(err);
                 })
                 // .on("stderr", function (stderrLine) {
                 //     console.log("Stderr output: " + stderrLine);
                 // })
                 .on("end", async () => {
-                    console.log("   ffmpeg end cmd");
+                    if (DEBUG_AZURE) console.log(prefix, "   ffmpeg end cmd");
                     pushStream.close();
                 })
 
                 .pipe(wfReader, { end: true });
 
-            console.log("started ffmpeg req");
+            if (DEBUG_AZURE) console.log(prefix, "started ffmpeg req");
             let audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
             var reco = new sdk.SpeechRecognizer(config, audioConfig);
-            console.log("   created recognizer");
+            if (DEBUG_AZURE) console.log(prefix, "   created recognizer");
 
             reco.recognizeOnceAsync(
                 result => {
-                    console.log(`RECOGNIZED: Text=${result.text}`);
+                    if (DEBUG_AZURE) console.log(prefix, `RECOGNIZED: Text=${result.text}`);
                     reco.close();
                     resolve(result.text);
                 },
@@ -68,7 +71,7 @@ export async function transcribeStreamAzure(
                 },
             );
 
-            console.log("   recognizer recognizeOnceAsync");
+            if (DEBUG_AZURE) console.log(prefix, "   recognizer recognizeOnceAsync");
         } catch (error) {
             console.error(error);
             reject(error);
