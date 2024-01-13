@@ -9,7 +9,7 @@ import Discord, {
 } from "discord.js";
 import type Stream from "stream";
 import { textToSpeach } from "./audio";
-import { transcribeStream } from "./voice/aws";
+// import { transcribeStream } from "./voice/aws";
 import Environment from "./config.env";
 import Config from "./config.json";
 import { deploy } from "./discord/deploy";
@@ -27,7 +27,7 @@ import {
     getTtsString as getTtsStringTarkovDev,
 } from "./flea/tarkov-dev";
 import { ITranscriptionCallback } from "./voice-detection/transcription-models";
-import { transcribeStreamAzure } from "./voice/azure";
+import { azureTts, transcribeStreamAzure } from "./voice/azure";
 
 const client = new Discord.Client({
     intents: [
@@ -55,8 +55,8 @@ client.on(Events.ClientReady, () => {
                 .then(async () => {
                     const voiceChannel = client.guilds.cache
                         .get(Environment.discord.auto_deploy_guild_id!)
-                        ?.members.cache.get(Environment.discord.dev_user_to_auto_listen!)?.voice
-                        .channel;
+                        ?.members.cache.get(Environment.discord.dev_user_to_auto_listen!)
+                        ?.voice.channel;
                     const textChannel = (await client.channels.fetch(
                         Environment.discord.dev_force_input_channel!,
                     )) as TextChannel;
@@ -130,16 +130,18 @@ client.on(Events.Error, console.warn);
  * @returns the keyword to lookup if one was found
  */
 export async function processTranscript(string: string | undefined): Promise<string | undefined> {
+    string = string.trim().toLowerCase();
     console.log("💬 Processing transcript: ", string);
     var result = undefined;
     if (string) {
         const regexCollection = Config.key_phrases;
 
         regexCollection.forEach(regex => {
-            const match = string.trim().toLowerCase().match(regex);
+            const reg = new RegExp(regex, "i");
+            const match = string.match(reg);
 
             if (match && match.length > 0) {
-                // console.log("found item", match[1]);
+                console.log("   processing ::: found item", match[1]);
                 result = match[1];
             }
         });
@@ -179,13 +181,17 @@ export async function handleQueryItemsInternal(
     voiceConnection: VoiceConnection | null,
     textChannelOutput: TextBasedChannel | GuildTextBasedChannel | null,
 ) {
+    console.log("🔍 Querying for items: ", query);
+
     if (Config.flea_source === "tarkov_dev") {
-        return queryItemsTarkovDev(query).then(items =>
-            onItemsFoundForTarkovDev(textChannelOutput, items, voiceConnection),
-        );
+        return queryItemsTarkovDev(query)
+            .then(items => onItemsFoundForTarkovDev(textChannelOutput, items, voiceConnection))
+            .catch(console.warn);
     } else if (Config.flea_source === "tarkov_market") {
         return queryItemsTarkovMarket(query).then(items =>
-            onItemsFoundForTarkovMarket(textChannelOutput, items, voiceConnection),
+            onItemsFoundForTarkovMarket(textChannelOutput, items, voiceConnection).catch(
+                console.warn,
+            ),
         );
     } else {
         throw new Error(
@@ -210,6 +216,8 @@ export async function onItemsFoundForTarkovDev(
         if (speech) {
             textToSpeach(speech, voiceConnection);
         }
+    } else {
+        console.log("❌ No items found for tarkov dev");
     }
 }
 
@@ -258,3 +266,8 @@ process.on("SIGABRT", () => cleanup({ exit: true }));
 var SegfaultHandler = require("segfault-handler");
 
 SegfaultHandler.registerHandler("crash.log");
+
+setInterval(() => {
+    // const memoryUsage = process.memoryUsage();
+    console.log("Memory usage:", process.memoryUsage.rss() / 1024 / 1024, "MB");
+}, 10000); // Log memory usage every 10 seconds

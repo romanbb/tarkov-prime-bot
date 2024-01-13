@@ -28,6 +28,7 @@ import {
 } from "../flea/tarkov-dev";
 import { UserState } from "../user-state";
 import { opus } from "prism-media";
+import { textToSpeach } from "../audio";
 
 const recording = new Set<Snowflake>();
 
@@ -66,7 +67,8 @@ export async function joinAndListen(
 
         console.log("interactions :: registering start and end listeners");
         receiver.speaking.on("start", setupStartEvent(connection, _textChannel));
-        receiver.speaking.on("end", endEvent);
+        // let it end naturally, listening to end results in race conditions previously
+        // receiver.speaking.on("end", endEvent);
     } catch (error) {
         console.error(error);
     }
@@ -92,11 +94,10 @@ const setupStartEvent = (
 
 const endEvent = userId => {
     // recording.delete(userId);
-    const endingStreams = activeStreams.get(userId);
-    activeStreams.delete(userId);
-    console.log(`-${userId} 💬 done speaking for stream ${endingStreams}`);
-
-    endingStreams.onUserStoppedTalking();
+    // const endingStreams = activeStreams.get(userId);
+    // activeStreams.delete(userId);
+    // console.log(`-${userId} 💬 done speaking for stream ${endingStreams}`);
+    // endingStreams.onUserStoppedTalking();
 };
 
 async function join(
@@ -131,8 +132,8 @@ async function join(
         const receiver = connection.receiver;
 
         receiver.speaking.on("start", setupStartEvent(connection, interaction.channel));
-
         receiver.speaking.on("end", endEvent);
+        console.log("registered for speaking events");
     } catch (error) {
         console.warn(error);
         await interaction.followUp(

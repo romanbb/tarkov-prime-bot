@@ -1,15 +1,21 @@
 import vosk, { SpeakerRecognizerParam } from "vosk";
 import Config from "../config.json";
 
-const DEBUG_VOSK = false;
+const DEBUG_VOSK = true;
 const MODEL_PATH = "support/vosk/vosk-model-en-us-0.22";
-// const MODEL_PATH_BIG = "support/vosk/vosk-model-en-us-0.42-gigaspeech"; //"vosk-model-en-us-0.22";
-// const MODEL_PATH_SMALL = "support/vosk/vosk-model-small-en-us-0.15"; //"vosk-model-en-us-0.22";
-const model = new vosk.Model(MODEL_PATH);
+const MODEL_PATH_BIG = "support/vosk/vosk-model-en-us-0.42-gigaspeech"; //"vosk-model-en-us-0.22";
+const MODEL_PATH_SMALL = "support/vosk/vosk-model-small-en-us-0.15"; //"vosk-model-en-us-0.22";
+const MODEL_SMALL_DANZU = "support/vosk/vosk-model-en-us-daanzu-20200905-lgraph";
+const model = new vosk.Model(MODEL_SMALL_DANZU);
 const sampleRate = 16000;
 vosk.setLogLevel(0);
 
-export function getVoskRecognize(): vosk.Recognizer<SpeakerRecognizerParam> {
+const recognizerMap = new Map<string, vosk.Recognizer<SpeakerRecognizerParam>>();
+
+export function getVoskRecognize(userId: string): vosk.Recognizer<SpeakerRecognizerParam> {
+    if (recognizerMap.has(userId)) {
+        return recognizerMap.get(userId);
+    }
     const rec = new vosk.Recognizer({
         model: model,
         sampleRate: sampleRate,
@@ -17,6 +23,7 @@ export function getVoskRecognize(): vosk.Recognizer<SpeakerRecognizerParam> {
     rec.setPartialWords(true);
     rec.setWords(true);
     rec.setMaxAlternatives(3);
+    recognizerMap.set(userId, rec);
     return rec;
 }
 

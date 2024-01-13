@@ -3,6 +3,7 @@ import { pipeline } from "stream";
 import { AudioReceiveStream, EndBehaviorType, VoiceReceiver } from "@discordjs/voice";
 import type { User } from "discord.js";
 import * as prism from "prism-media";
+import { opus } from "prism-media";
 
 function getDisplayName(userId: string, user?: User) {
     return user ? `${user.username}_${user.discriminator}` : userId;
@@ -47,9 +48,9 @@ export function subscribeOpusStream(receiver: VoiceReceiver, userId: string): Au
     // console.log("instance nonce:", nonce, " creating stream");
     const opusStream = receiver.subscribe(userId, {
         end: {
-            behavior: EndBehaviorType.Manual,
-            // behavior: EndBehaviorType.AfterSilence,
-            // duration: 1000,
+            // behavior: EndBehaviorType.Manual,
+            behavior: EndBehaviorType.AfterSilence,
+            duration: 800,
         },
     });
 
