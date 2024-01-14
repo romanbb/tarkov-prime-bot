@@ -1,5 +1,5 @@
-import { AudioReceiveStream, EndBehaviorType, VoiceConnection } from "@discordjs/voice";
-import { PassThrough, Readable, Stream, pipeline } from "stream";
+import { VoiceConnection } from "@discordjs/voice";
+import { PassThrough, pipeline } from "stream";
 import vosk, { SpeakerRecognizerParam } from "vosk";
 import { doesContainTriggerKeywords, getVoskRecognize } from "./voice-detection/vosk";
 import { transcribeStreamAzure } from "./voice/azure";
@@ -8,6 +8,9 @@ import { GuildTextBasedChannel, TextBasedChannel } from "discord.js";
 import { subscribeOpusStream } from "./discord/createListeningStream";
 import { opus } from "prism-media";
 import fs from "fs";
+
+const DEBUG = false;
+
 export class UserVoiceSession {
     private connection: VoiceConnection;
     private channel?: TextBasedChannel | GuildTextBasedChannel;
@@ -77,14 +80,11 @@ export class UserVoiceSession {
             userFileRecordingStream.destroy();
         });
 
-        console.log("pipeline setup");
+        if (DEBUG) console.log("pipeline setup");
 
         this.pcmStream.on("data", this.voskDataListener);
-        // this.pcmStream.on("data", () => {});
         this.pcmStream.on("end", this.voskCompletionListener);
-        console.log("data listener added");
-
-        // this.stream.resume();
+        if (DEBUG) console.log("data listener added");
 
         // this.oggStream.on("end", async () => {
         //     console.log("oggStream end event");
@@ -176,7 +176,7 @@ export class UserVoiceSession {
      */
     startTranscription() {
         if (this.transcriptionStarted) {
-            console.log("transcription already started, avoiding starting again.");
+            if (DEBUG) console.log("transcription already started, avoiding starting again.");
             return;
         }
         this.transcriptionStarted = true;
@@ -204,10 +204,6 @@ export class UserVoiceSession {
     }
     printMetrics = () => {
         const metrics = {
-            // Stream: this.pcmStream,
-            // OggStream: this.oggStream,
-            // OggStreamPassthrough: this.through,
-            // WavAudioStream: this.wavAudioStream,
             "User Id": this.userId,
             "Transcription Result": this.transcriptionResult,
             "🗣️ Offline Detection Time": `${
@@ -232,17 +228,13 @@ export class UserVoiceSession {
     };
 
     async releaseSpeakingResources() {
-        console.log("releaseSpeakingResources called");
-        // this.wavAudioStream.end();
-        // this.oggStream.end();
-        // this.oggStream.unpipe();
+        if (DEBUG) console.log("releaseSpeakingResources called");
 
-        // this.pcmStreamPassthrough.end();
         this.pcmStream.removeAllListeners();
     }
 
     releaseTranscriptionResources() {
-        console.log("releaseTranscriptionResources called");
+        if (DEBUG) console.log("releaseTranscriptionResources called");
         fs.rm(this.userFileRecordingName, err => {
             if (err) {
                 console.error("❌ Error removing file", err);
@@ -250,20 +242,6 @@ export class UserVoiceSession {
         });
 
         this.pcmStream = undefined;
-        // this.pcmStream.removeAllListeners();
-        // this.pcmStream.destroy();
-        // this.pcmStream = undefined;
-        // this.oggStream.unpipe();
-        // this.oggStreamPassthrough.destroy();
-
-        // this.wavAudioStream.removeAllListeners();
-        // this.wavAudioStream.destroy();
-
-        // this.oggStream.removeAllListeners();
-        // this.oggStream.destroy();
-        // this.stream();
-        // this.stream.removeAllListeners();
-        // this.stream.destroy();
     }
 }
 
@@ -276,14 +254,14 @@ export class UserState {
     private channel?: TextBasedChannel | GuildTextBasedChannel;
 
     public constructor(userId: string) {
-        console.log("Creating new UserState");
+        if (DEBUG) console.log("Creating new UserState");
         this.userId = userId;
     }
     /**
      * Called when the user starts talking, may be called after user starts talking event
      */
     onStartRecognitionSession() {
-        console.log("onStartRecognitionSession for ", this.userId);
+        if (DEBUG) console.log("onStartRecognitionSession for ", this.userId);
 
         if (this.lastActiveUserSession) {
             // this.lastActiveUserSession.pcmStream = undefined;
@@ -300,7 +278,7 @@ export class UserState {
      * Called when we determined the user stops talking. May be called after user stops talking event
      */
     async onStopRecognitionSession(session: UserVoiceSession) {
-        console.log("onStopRecognitionSession for ", this.userId);
+        if (DEBUG) console.log("onStopRecognitionSession for ", this.userId);
 
         await session.releaseSpeakingResources();
     }
@@ -311,7 +289,7 @@ export class UserState {
      * @param channel
      */
     onNewStream(connection: VoiceConnection, channel?: TextBasedChannel | GuildTextBasedChannel) {
-        console.log("onNewStream for ", this.userId);
+        if (DEBUG) console.log("onNewStream for ", this.userId);
         this.connection = connection;
         this.channel = channel;
 
@@ -323,7 +301,7 @@ export class UserState {
             session?.pcmStream == undefined ||
             session?.pcmStream?.destroyed === true
         ) {
-            console.log(" -> onStartRecognitionSession", session?.pcmStream?.destroyed);
+            if (DEBUG) console.log(" -> onStartRecognitionSession", session?.pcmStream?.destroyed);
             session = this.onStartRecognitionSession();
             session.pcmStream.once("end", () => {
                 this.onUserStoppedTalking();
@@ -332,6 +310,9 @@ export class UserState {
             console.log("note: no timeout to clear, and old stream is not destroyed.");
         }
     }
+    /**
+     * After the user stream ends
+     */
     async onUserStoppedTalking() {
         this.connection.removeAllListeners(this.userId);
         const session = this.lastActiveUserSession;
@@ -339,7 +320,7 @@ export class UserState {
         session.endSpeakingTimestamp = new Date().getTime();
 
         this.onStopRecognitionSession(session);
-        console.log("onUserStoppedTalking for ", this.userId);
+        if (DEBUG) console.log("onUserStoppedTalking for ", this.userId);
     }
 
     toString() {

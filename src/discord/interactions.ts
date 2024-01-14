@@ -65,7 +65,6 @@ export async function joinAndListen(
 
         console.log("interactions :: registering start and end listeners");
         receiver.speaking.on("start", setupStartEvent(connection, _textChannel));
-        // voiceChannel.sendTyping();
         // let it end naturally, listening to end results in race conditions previously
         // receiver.speaking.on("end", endEvent);
     } catch (error) {

@@ -42,25 +42,6 @@ export async function transcribeStreamAzure(
             stream.on("close", () => {
                 pushStream.close();
             });
-            // ffmpeg(stream)
-            //     .audioChannels(1)
-            //     .audioFrequency(16000)
-            //     .audioCodec("pcm_s16le")
-            //     .format("wav")
-            //     .on("error", err => {
-            //         if (DEBUG_AZURE)
-            //             console.log(prefix, "An error occurred: " + err.message + ", err" + err);
-            //         reject(err);
-            //     })
-            //     // .on("stderr", function (stderrLine) {
-            //     //     console.log("Stderr output: " + stderrLine);
-            //     // })
-            //     .on("end", async () => {
-            //         if (DEBUG_AZURE) console.log(prefix, "   ffmpeg end cmd");
-            //         pushStream.close();
-            //     })
-
-            //     .pipe(wfReader, { end: true });
 
             if (DEBUG_AZURE) console.log(prefix, "started ffmpeg req");
             let audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
