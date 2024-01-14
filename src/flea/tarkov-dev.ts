@@ -34,13 +34,14 @@ export async function queryItem(query: string | undefined): Promise<Types.Item[]
     `;
 
     const result = await request<{ items: Types.Item[] }>("https://api.tarkov.dev/graphql", gqlQ);
+    console.log("Tarkov Dev result", result);
     return result.items;
 }
 
 function findBestTrader(prices: Types.ItemPrice[]): Types.ItemPrice {
     if (!prices.length) {
         // return undefined;
-        throw "Unexpected empty prices";
+        throw Error("Unexpected empty prices");
     }
     let bestPrice: Types.ItemPrice = prices[0]!;
 

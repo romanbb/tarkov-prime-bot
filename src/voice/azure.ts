@@ -71,6 +71,7 @@ export async function transcribeStreamAzure(
                 result => {
                     if (DEBUG_AZURE) console.log(prefix, `RECOGNIZED: Text=${result.text}`);
                     reco.close();
+                    stream.destroy();
                     resolve(result.text);
                 },
                 (error: any) => {

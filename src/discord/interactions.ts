@@ -28,7 +28,7 @@ import {
 } from "../flea/tarkov-dev";
 import { UserState } from "../user-state";
 import { opus } from "prism-media";
-import { textToSpeach } from "../audio";
+import { textToSpeach } from "../voice/tts";
 
 const recording = new Set<Snowflake>();
 
@@ -133,10 +133,10 @@ async function join(
         const receiver = connection.receiver;
 
         receiver.speaking.on("start", setupStartEvent(connection, interaction.channel));
-        receiver.speaking.on("end", endEvent);
+        // receiver.speaking.on("end", endEvent);
         console.log("registered for speaking events");
     } catch (error) {
-        console.warn(error);
+        console.log("error registering for speaking events", error);
         await interaction.followUp(
             "Failed to join voice channel within 20 seconds, please try again later!",
         );

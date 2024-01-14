@@ -72,6 +72,9 @@ export class UserVoiceSession {
             } else {
                 console.log("✅ opus stream pipeline finished");
             }
+            opusStream.destroy();
+            decoder.destroy();
+            userFileRecordingStream.destroy();
         });
 
         console.log("pipeline setup");
@@ -178,7 +181,6 @@ export class UserVoiceSession {
         }
         this.transcriptionStarted = true;
 
-        console.log(">> I WOULD START TRANSCRIPTION HERE <<<");
         // go
         transcribeStreamAzure(this.userFileRecordingName, null)
             .then(transcription => {
@@ -193,6 +195,8 @@ export class UserVoiceSession {
             .then(() => {
                 this.endItemQueryTimestamp = new Date().getTime();
                 this.printMetrics();
+                this.connection = undefined;
+                this.channel = undefined;
             })
             .catch(error => {
                 console.error("❌ Error in transcribe process", error);
@@ -234,12 +238,18 @@ export class UserVoiceSession {
         // this.oggStream.unpipe();
 
         // this.pcmStreamPassthrough.end();
+        this.pcmStream.removeAllListeners();
     }
 
     releaseTranscriptionResources() {
         console.log("releaseTranscriptionResources called");
-        fs.rm(this.userFileRecordingName, console.error);
+        fs.rm(this.userFileRecordingName, err => {
+            if (err) {
+                console.error("❌ Error removing file", err);
+            }
+        });
 
+        this.pcmStream = undefined;
         // this.pcmStream.removeAllListeners();
         // this.pcmStream.destroy();
         // this.pcmStream = undefined;
@@ -258,8 +268,6 @@ export class UserVoiceSession {
 }
 
 export class UserState {
-    internalActiveStreamId: string = new Date().getTime().toString();
-
     userId: string;
 
     private lastActiveUserSession: UserVoiceSession | undefined;
@@ -268,6 +276,7 @@ export class UserState {
     private channel?: TextBasedChannel | GuildTextBasedChannel;
 
     public constructor(userId: string) {
+        console.log("Creating new UserState");
         this.userId = userId;
     }
     /**
@@ -275,6 +284,11 @@ export class UserState {
      */
     onStartRecognitionSession() {
         console.log("onStartRecognitionSession for ", this.userId);
+
+        if (this.lastActiveUserSession) {
+            // this.lastActiveUserSession.pcmStream = undefined;
+            this.lastActiveUserSession = undefined;
+        }
 
         const userSession = new UserVoiceSession(this.userId, this.connection, this.channel);
 
@@ -305,11 +319,11 @@ export class UserState {
         let session: UserVoiceSession = this.lastActiveUserSession;
 
         if (
-            session === undefined ||
-            session?.pcmStream === undefined ||
-            session?.pcmStream.destroyed === true
+            session == undefined ||
+            session?.pcmStream == undefined ||
+            session?.pcmStream?.destroyed === true
         ) {
-            console.log(" -> onStartRecognitionSession", session?.pcmStream.destroyed);
+            console.log(" -> onStartRecognitionSession", session?.pcmStream?.destroyed);
             session = this.onStartRecognitionSession();
             session.pcmStream.once("end", () => {
                 this.onUserStoppedTalking();

@@ -8,7 +8,7 @@ import Discord, {
     TextChannel,
 } from "discord.js";
 import type Stream from "stream";
-import { textToSpeach } from "./audio";
+import { textToSpeach } from "./voice/tts";
 // import { transcribeStream } from "./voice/aws";
 import Environment from "./config.env";
 import Config from "./config.json";
@@ -119,11 +119,11 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
             await interaction.reply("Unknown command");
         }
     } catch (error) {
-        console.warn(error);
+        console.log("error in handler", error);
     }
 });
 
-client.on(Events.Error, console.warn);
+client.on(Events.Error, console.error);
 
 /**
  * @param string transcript to look for phrases to pull keywords out of
@@ -186,11 +186,11 @@ export async function handleQueryItemsInternal(
     if (Config.flea_source === "tarkov_dev") {
         return queryItemsTarkovDev(query)
             .then(items => onItemsFoundForTarkovDev(textChannelOutput, items, voiceConnection))
-            .catch(e => console.warn(e));
+            .catch(e => console.log("error querying tarkov dev", e));
     } else if (Config.flea_source === "tarkov_market") {
         return queryItemsTarkovMarket(query).then(items =>
             onItemsFoundForTarkovMarket(textChannelOutput, items, voiceConnection).catch(e =>
-                console.warn(e),
+                console.log("error querying tarkov market", e),
             ),
         );
     } else {
@@ -205,6 +205,7 @@ export async function onItemsFoundForTarkovDev(
     items: TarkovDev.Item[] | null,
     voiceConnection: VoiceConnection | null,
 ) {
+    // console.log("📦 Items found for tarkov dev", items, "voiceConnection:", voiceConnection);
     if (textChannel && items) {
         const embed = embedForItemsTarkovDev(items);
         if (embed) {
@@ -256,7 +257,7 @@ const cleanup = (options: { exit?: boolean }) => {
 };
 
 // cleanup bot on exit, disconnect from channel, etc
-process.on("exit", () => cleanup({ exit: true }));
+// process.on("exit", () => cleanup({ exit: true }));
 process.on("SIGINT", err => {
     console.log("error", err);
     cleanup({ exit: true });
