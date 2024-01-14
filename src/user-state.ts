@@ -230,9 +230,9 @@ export class UserVoiceSession {
         console.log("releaseTranscriptionResources called");
         fs.rm(this.userFileRecordingName, console.error);
 
-        this.pcmStream.removeAllListeners();
-        this.pcmStream.destroy();
-        this.pcmStream = undefined;
+        // this.pcmStream.removeAllListeners();
+        // this.pcmStream.destroy();
+        // this.pcmStream = undefined;
         // this.oggStream.unpipe();
         // this.oggStreamPassthrough.destroy();
 
