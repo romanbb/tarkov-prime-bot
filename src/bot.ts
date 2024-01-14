@@ -27,7 +27,7 @@ import {
     getTtsString as getTtsStringTarkovDev,
 } from "./flea/tarkov-dev";
 import { ITranscriptionCallback } from "./voice-detection/transcription-models";
-import { azureTts, transcribeStreamAzure } from "./voice/azure";
+import { transcribeStreamAzure } from "./voice/azure";
 
 const client = new Discord.Client({
     intents: [
@@ -161,7 +161,7 @@ export async function handleAudioStream(
     textChannelOutput: TextBasedChannel | GuildTextBasedChannel | null,
     transcriptionCallback?: ITranscriptionCallback,
 ) {
-    transcribeStreamAzure(undefined, audioStream as any)
+    transcribeStreamAzure(undefined, audioStream)
         .then(transcript => {
             if (transcriptionCallback) {
                 console.log("calling transcription callback");
@@ -269,5 +269,9 @@ SegfaultHandler.registerHandler("crash.log");
 
 setInterval(() => {
     // const memoryUsage = process.memoryUsage();
+    if (global.gc) {
+        console.log("(did gc)");
+        global.gc();
+    }
     console.log("Memory usage:", process.memoryUsage.rss() / 1024 / 1024, "MB");
 }, 10000); // Log memory usage every 10 seconds
