@@ -27,8 +27,6 @@ import {
     embedForItems as embedForItemsTarkovDev,
 } from "../flea/tarkov-dev";
 import { UserState } from "../user-state";
-import { opus } from "prism-media";
-import { textToSpeach } from "../voice/tts";
 
 const recording = new Set<Snowflake>();
 

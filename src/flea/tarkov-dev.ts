@@ -34,7 +34,12 @@ export async function queryItem(query: string | undefined): Promise<Types.Item[]
     `;
 
     const result = await request<{ items: Types.Item[] }>("https://api.tarkov.dev/graphql", gqlQ);
-    console.log("Tarkov Dev result", result);
+    if (result.items.length > 0) {
+        // filter out "ammo pack" from results
+        result.items = result.items.filter(item => !item.name.toLowerCase().includes("ammo pack"));
+
+        console.log("Tarkov Dev results:", result);
+    }
     return result.items;
 }
 
@@ -83,7 +88,7 @@ export function embedForItems(items: Types.Item[] | null): EmbedBuilder | null {
     if (!items || !items.length || !items[0]) {
         return null;
     }
-    console.log("embedForItems", items);
+    // console.log("embedForItems", items);
     const mainItem = items[0];
     const avg24hPrice = mainItem.avg24hPrice ?? 0;
     const slots = mainItem.width * mainItem.height;
