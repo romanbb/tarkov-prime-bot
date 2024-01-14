@@ -47,6 +47,7 @@ export function subscribeOpusStream(receiver: VoiceReceiver, userId: string): Au
     // const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     // console.log("instance nonce:", nonce, " creating stream");
     const opusStream = receiver.subscribe(userId, {
+        autoDestroy: true,
         end: {
             // behavior: EndBehaviorType.Manual,
             behavior: EndBehaviorType.AfterSilence,

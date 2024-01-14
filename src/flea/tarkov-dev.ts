@@ -82,6 +82,7 @@ export function embedForItems(items: Types.Item[] | null): EmbedBuilder | null {
     if (!items || !items.length || !items[0]) {
         return null;
     }
+    console.log("embedForItems", items);
     const mainItem = items[0];
     const avg24hPrice = mainItem.avg24hPrice ?? 0;
     const slots = mainItem.width * mainItem.height;
@@ -89,9 +90,12 @@ export function embedForItems(items: Types.Item[] | null): EmbedBuilder | null {
     const bannedOnFlea = avg24hPrice === 0;
     const embed = new EmbedBuilder()
         .setTitle(mainItem.shortName ?? null)
-        .setURL(mainItem.wikiLink ?? null)
+        .setURL(mainItem.wikiLink || mainItem.link)
         .setDescription(mainItem.name ?? null)
-        .setAuthor({ name: "Tarkov Prime Flea Lookup", url: mainItem.link ?? "" })
+        .setAuthor({
+            name: "Tarkov Prime Flea Lookup",
+            url: mainItem.link || null,
+        })
         // .setImage(mainItem.imgBig)
         .setThumbnail(mainItem.iconLink ?? null);
 

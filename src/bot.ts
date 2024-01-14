@@ -186,11 +186,11 @@ export async function handleQueryItemsInternal(
     if (Config.flea_source === "tarkov_dev") {
         return queryItemsTarkovDev(query)
             .then(items => onItemsFoundForTarkovDev(textChannelOutput, items, voiceConnection))
-            .catch(console.warn);
+            .catch(e => console.warn(e));
     } else if (Config.flea_source === "tarkov_market") {
         return queryItemsTarkovMarket(query).then(items =>
-            onItemsFoundForTarkovMarket(textChannelOutput, items, voiceConnection).catch(
-                console.warn,
+            onItemsFoundForTarkovMarket(textChannelOutput, items, voiceConnection).catch(e =>
+                console.warn(e),
             ),
         );
     } else {

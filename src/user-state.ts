@@ -16,9 +16,12 @@ export class UserVoiceSession {
     private releasedSpeakingResources: boolean = false;
 
     /**
-     * The discord opus stream
+     * The discord stream transformed to pcm
      */
-    pcmStream: PassThrough | undefined = new PassThrough();
+    pcmStream: PassThrough | undefined = new PassThrough({
+        highWaterMark: 1024,
+        autoDestroy: true,
+    });
 
     /**
      * Only start transcription once.
@@ -53,8 +56,15 @@ export class UserVoiceSession {
 
         // subscribe to the opus stream
         const opusStream = subscribeOpusStream(connection.receiver, this.userId);
-        const decoder = new opus.Decoder({ frameSize: 960, channels: 1, rate: 16000 });
-        const userFileRecordingStream = fs.createWriteStream(this.userFileRecordingName);
+        const decoder = new opus.Decoder({
+            frameSize: 960,
+            channels: 1,
+            rate: 16000,
+            streamOptions: { autoDestroy: true },
+        });
+        const userFileRecordingStream = fs.createWriteStream(this.userFileRecordingName, {
+            autoClose: true,
+        });
         // pipe opus stream to ogg, then to the pass through
         pipeline(opusStream, decoder, this.pcmStream, userFileRecordingStream, err => {
             if (err) {
